@@ -1,0 +1,158 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+        <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    </head>
+<body>
+    <div class="container">
+        <h2 style="margin:20px;">DASHBOARD</h2>
+        <div class="row">
+            <div class="alert alert-success col-8" role="alert">
+                <h4 class="alert-heading" id="indexstatus">Followers Index - {{index_status}}</h4>
+                <p>You currently have {{fcount}} followers</p>
+                <p>Campaign status :: <span id="campaignsstatus"> </span></p>
+                <a href="/search" target="_blank" class="badge badge-primary">SHOW ALL FOLLOWERS</a>
+            </div>
+            <div class="card col-4" id="cdetails" style="width: 18rem;display:none">
+                <div class="card-header" id="cid">
+                Campaign ID 
+                </div>
+                <ul class="list-group list-group-flush">
+                <li class="list-group-item" id="cname">Name</li>
+                <li class="list-group-item" id="cmesg"></li>
+                <li class="list-group-item" id="cstatus">Status</li>
+                <li class="list-group-item" id="cstats">Sent to 2/54</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <table id="spreadsheet">
+
+        </table>
+    </div>
+    <script>
+        window.onload = function onload() {
+
+            window.dataTable = null;
+            window.currCampaign = null;
+            function display_campaigns(data){
+
+                var columns = Object.keys(data[0]);
+                var columnsMap = columns.map(function(d){ return { 'data': d, 'title': d}; });
+                data = Object.keys(data).map(function(dk) {
+                        return data[dk];
+                    });
+                window.dataTable =  $('#spreadsheet').DataTable({
+                            "data": data,
+                            "columns": columnsMap
+                        });
+                
+                $('#spreadsheet tbody').on('click', 'tr', function () {
+                            var data = window.dataTable.row( this ).data();
+                            getCampaign(data.id)
+                        });
+                        
+            }
+
+            function refreshCurrCampaign(){
+                
+                let cc = window.currCampaign;
+
+                $("#cid").text(cc.id);
+                $("#cname").text(cc.name);
+                $("#cmesg").text(cc.message_template);
+                $("#cstatus").text(cc.status);
+
+                let sentCount = 0;
+                let totalCount = cc.followers.length;
+                for(let i=0;i<cc.followers.length;i++){
+                    let f = cc.followers[i];
+                    if(f.sent_time !== null && f.sent_time.length > 0){
+                        sentCount++;
+                    }
+                }
+
+                $("#cstats").text(`Sent ${sentCount} out of ${totalCount}`);
+                $("#cdetails").show();
+            }
+
+            function getCampaigns(){
+
+                $.ajax({
+                    type: "GET",
+                    url: '/campaigns',
+                    dataType: "json",
+                    success:function(data){
+                        display_campaigns(data);
+                        if(data instanceof Array && data.length>0){
+                            getCampaign(data[0].id)
+                        }
+                    },
+                    error:function(err) {
+                        alert(err);
+                    }
+                });
+
+            }
+
+            function getUpdates() {
+                $.get({
+                    url:'/status',
+                    success: function(data) {
+                        console.log(data);
+                        $('#campaignsstatus').text(data.campaigns_status);
+                        $('#indexstatus').text('Followers Index - ' + data.index_status);
+                    },
+                    error: function(err) {
+                        console.log(data);
+                        alert(err);
+                    }
+                })
+            }
+ 
+            setInterval(getUpdates, 5000);
+            
+            getCampaigns();
+            getUpdates();
+
+            function getCampaign(id, cb, errcb){
+                
+                $.ajax({
+                    type: "GET",
+                    url: '/campaigns?campaign_id='+id,
+                    dataType: "json",
+                    success:function(data){
+                        window.currCampaign = data;
+                        refreshCurrCampaign();
+                    },
+                    error:function(err) {
+                        errcb(err);
+                    }
+                });
+
+            }
+
+            function deleteCampaign(id){
+
+                    $.ajax({
+                        type: "DELETE",
+                        url: '/campaigns?campaign_id='+id,
+                        dataType: "json",
+                        success:function(data){
+                            cb(data);
+                        },
+                        error:function(err) {
+                            errcb(err);
+                        }
+                    });
+            }
+        }
+     </script>
+</body>
+</html>

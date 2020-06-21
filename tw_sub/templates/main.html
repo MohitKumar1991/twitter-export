@@ -1,0 +1,146 @@
+<html>
+<head>
+    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+    <h2 style="margin:20px">FOLLOWERS</h2>
+    <p>MAIN POINTS: 1. QUERY is anything after WHERE keyword 2. LIMIT is just a number (without the limit keyword)</p>
+    <form id="searchInput">
+        <div class="form-group">
+            <label for="">Filter Followers SQL Query</label>
+            <input type="text" class="form-control" id="query" placeholder="QUERY" value="">
+            <input type="text" class="form-control" id="limit" placeholder="LIMIT 2000 Default" value="">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Search</button>
+    </form>
+    <button id="ccButton" class="btn btn-primary" data-toggle="modal" data-target="#campaignModal">Create Campaign with these followers</button>
+    <div class="modal fade" id="campaignModal" tabindex="-1" role="dialog" aria-labelledby="campaignModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Create Campaign</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form id="cModal">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="cname" placeholder="Campaign Name" value="">
+                        <textarea class="form-control" id="cmesg" placeholder="Campaign Message" rows="5"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <table id="spreadsheet" class="display" width="90%"></table>
+    <script>
+        window.onload = function onload() {
+
+            window.currentFollowers = [];
+            var dataTable = null;
+            
+            $('#ccButton').click(function() {
+                $('#campaignModal').modal('show');
+            });
+
+            $('#searchInput').submit(function(e) {
+                e.preventDefault();
+                var query = $('#query').val();
+                var limit = $('#limit').val();
+                getFollowers(query, limit);
+            });
+
+            $('#cModal').submit(function(e) {
+                e.preventDefault();
+                var cname = $('#cname').val();
+                var cmesg = $('#cmesg').val();
+                var follower_ids = window.currentFollowers.map(function(cf){
+                    return cf.id;
+                });
+                $.ajax({
+                        type: "POST",
+                        url: '/campaigns',
+                        contentType: 'application/json',
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                                'message_template': cmesg, 
+                                'name': cname, 
+                                'followers': follower_ids
+                            }),
+                        success:function(data){
+                            alert('Campaign Created!!');
+                            window.open('/updates', '_blank');
+                        },
+                        error:function(err) {
+                            alert(`There was an error in creating ${err}`);
+                        }
+                    });
+            });
+
+            function getFollowers(query, limit) {
+
+                    $.get({
+                        url:'/followers', 
+                        data: {
+                            query:  query,
+                            limit: limit
+                        },
+                        success: function(data){
+                            console.log(data);
+                            $('totalFollowers').text(data.total);
+                            data = data.followers;
+                            if(data.length == 0){
+                                window.currentFollowers = data;
+                                if(dataTable !== null) { dataTable.clear(); dataTable.draw(); }
+                                return;
+                            }
+                            if(typeof data !== 'undefined'){
+                                window.currentFollowers = data;
+                            }
+                            var columns = Object.keys(data[0])
+                            var columnsMap = columns.map(function(d){ return { 'data': d, 'title': d }; });
+                            data = Object.keys(data).map(function(dk) {
+                                return data[dk];
+                            });
+                            console.log(data);
+                            if(dataTable === null) {
+                                dataTable = $('#spreadsheet').DataTable({
+                                    "data": data,
+                                    "columns": columnsMap,
+                                    "columnDefs" : [{
+                                            "targets" : columns.indexOf('profile_image_url') ,
+                                            "render" : function ( url, type, full) {
+                                                return '<img height="75%" width="75%" src="'+url+'"/>';
+                                            }
+                                    }]
+                                    
+                                });
+
+                            } else {
+                                dataTable.clear();
+                                dataTable.rows.add(data).draw();
+                            }
+                            
+                        }
+                    });
+            }
+
+            getFollowers('','')
+           
+        }
+     </script>
+    
+</body>
+</html>

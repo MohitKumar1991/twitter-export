@@ -1,0 +1,88 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h2 style="margin:20px">AUTHENTICATION</h2>
+        <p>MAIN POINTS: 1. Create an App on Twitter with Read, Write and Direct Message Permission 2. Add the keys here</p>
+        <div class="row">
+            <div class="col-6">
+                <form id="consumerform">
+                    <div class="form-group">
+                    <label for="Consumer Keys">Consumer Keys</label>
+                    <input type="text" class="form-control" id="consumer-keys" placeholder="Consumer Keys" value="{{consumer_key}}">
+                    <input type="text" class="form-control" id="consumer-secret" placeholder="Consumer Secret" value="{{consumer_secret}}">
+                    <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="invalid-feedback">
+                        Something went wrong while getting your link.
+                    </div>
+                </form>
+                <form id="pinform" style='display:none;'>
+                    <a id="auth_url" target="_blank">
+                        <label class="form-check-label" id="auth_url_text">
+                            Go to this url: 
+                        </label>
+                    </a>
+                    <input type="text" class="form-control" id="pin" placeholder="Enter Pin Code Here" value="">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="invalid-feedback">
+                        The pin didn't work.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function (){
+            var auth_url = null;
+            $('#consumerform').submit(function ss(e){
+                e.preventDefault();
+                $.get({
+                    url:'/auth_link?consumer_key=' + $('#consumer-keys').val() + '&consumer_secret=' + $('#consumer-secret').val(), 
+                        success: function(data){
+                            console.log('GET SUCCESS', data);
+                            auth_url = data.auth_url;
+                            $('#consumer-keys').removeClass('is-invalid');
+                            $('#consumer-secret').removeClass('is-invalid');
+                            $('#auth_url').attr('href', auth_url);
+                            $('#auth_url_text').text('Go to this url: ' + auth_url);
+                            $('#pinform').show();
+                            $('#consumerform').hide();
+                        },
+                        error: function(data) {
+                            console.log(data);
+                            $('#consumer-keys').addClass('is-invalid');
+                            $('#consumer-secret').addClass('is-invalid');
+                        }
+
+                });
+            });
+
+            $('#pinform').submit(function pinsubmit(e){
+                e.preventDefault();
+                var pin = $('#pin').val();
+                $.get({
+                    url:'/auth_pin?pin='+pin,
+                    success: function(data){
+                            alert('SUCCESS - Redirecting to Dashboard');
+                            window.location = '/search';
+                        },
+                    error: function(data) {
+                            alert('ERROR - ' + JSON.stringify(data));
+                            console.log(data);
+                        }
+                });
+            });
+
+        }
+    </script>
+</body>
+</html>
+
+		
