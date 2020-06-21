@@ -21,7 +21,6 @@ def get_followers_with_query(query):
 
 def get_one_follower(follower_id):
     followers = fdb_worker.execute("select * from all_followers where id=?", (follower_id,))
-    print('GET FOLLOWERS FINAL QUERY', query)
     if type(followers) == str:
         print(followers)
         return None

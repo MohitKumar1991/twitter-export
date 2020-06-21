@@ -10,8 +10,6 @@ from flask import Flask
 app = Flask("Indexer")
 stop_event = threading.Event()
 
-
-
 def start_followers_task(stop_event):
     ftasks = FollowersTask(username=USERNAME, stop_event=stop_event)
     ftasks.run()
@@ -21,7 +19,7 @@ def start_campaign_task(stop_event):
     ctask.run()
 
 
-# followers_thread = threading.Thread(target=start_followers_task, args=(stop_event,))
+followers_thread = threading.Thread(target=start_followers_task, args=(stop_event,))
 campaign_thread = threading.Thread(target=start_campaign_task, args=(stop_event,))
 
 @app.route('/status', methods=['GET'])
@@ -34,15 +32,14 @@ def status():
 
 
 def shutdown(sig, stackframe):
-    print('GOT INTO SHUTDOWN')
+    print('SHUTTING DOWN....')
     stop_event.set()
-    # followers_thread.join()
+    followers_thread.join()
     campaign_thread.join()
     sys.exit(0)
 
 def runner():
-    # followers_thread.start()
-    # campaign_thread.start()
-    campaign_thread.run()
+    followers_thread.start()
+    campaign_thread.start()
     signal.signal(signal.SIGINT, shutdown)
     app.run(debug=True)

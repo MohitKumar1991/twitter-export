@@ -1,7 +1,7 @@
 import sqlite3, tweepy, os
 from sqlite3worker import Sqlite3Worker
 from .db import init_followers_db, init_campaign_db, init_state_db
-from .utils import load_state, store_state
+from .utils import load_state, store_state, load_state_worker
 from tweepy.error import TweepError
 
 MODE = os.environ.get('MODE','ALL') #ALL, SERVER, INDEX
@@ -9,7 +9,7 @@ MODE = os.environ.get('MODE','ALL') #ALL, SERVER, INDEX
 FOLLOWERS_DB = 'followers.db'
 CAMPAIGN_DB = 'campaign.db'
 STATE_DB = 'state.db'
-USERNAME = 'balajis'
+USERNAME = ''
 
 if not os.path.isfile(STATE_DB):
     state_db = sqlite3.connect(STATE_DB)
@@ -26,8 +26,8 @@ tweepyapi = None
 IS_AUTH = False
 
 def reset_tweepyapi():
-    global IS_AUTH, tweepyapi
-    curr_state = load_state(state_db)
+    global IS_AUTH, tweepyapi, _auth, state_db_worker
+    curr_state = load_state_worker(state_db_worker)
     if 'CONSUMER_KEY' in curr_state and 'CONSUMER_SECRET_KEY' in curr_state:
         _auth = tweepy.OAuthHandler(curr_state['CONSUMER_KEY'], curr_state['CONSUMER_SECRET_KEY'])
 
@@ -37,7 +37,7 @@ def reset_tweepyapi():
         try:
             myuser = tweepyapi.me()
             IS_AUTH = True
-            USERNAME = 'balajis' #myuser.screen_name
+            USERNAME = myuser.screen_name #'balajis'
             return True
         except TweepError as e:
             print(e)

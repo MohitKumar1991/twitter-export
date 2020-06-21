@@ -28,7 +28,9 @@ def store_state_worker(state_db_worker, d:dict):
 def load_state_worker(state_db_worker) -> dict:
     result = {}
     rows = state_db_worker.execute(''' select * from curr_state_table ''')
+    if type(rows) == str:
+        print(rows)
+        return result
     for row in rows:
         result[row[0]] = row[1]
-    print('STATE LOADED', result)
     return result

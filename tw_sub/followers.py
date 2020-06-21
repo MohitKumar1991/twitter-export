@@ -72,7 +72,6 @@ class FollowersTask:
         self.curr_iterator = tweepy.Cursor(self.tweepyapi.followers_ids, screen_name=self.username, cursor=self.checkpoint['next_cursor']).pages()
 
     def run(self):
-        self._wait_for_update()
         while not self.task_run.is_set():
             self._wait_till_available()
             try:
@@ -112,10 +111,12 @@ class FollowersTask:
     
     def _wait_till_available(self):
         while True:
+            state = load_state(self.db)
+            self.index_status = state.get('index_status', 'INIT')
             if not self.auth:
                 time.sleep(60)
                 reset_tweepyapi()
-            elif self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=15):
+            elif self.index_status == 'READY' or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=15)):
                 time.sleep(60)
             else:
                 return
