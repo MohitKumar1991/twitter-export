@@ -10,8 +10,7 @@
 
 ```shell
 poetry install
-poetry run runner &
-poetry run waitress-serve --call "tw_sub:create_app"
+poetry run server
 ```
 
 This will 

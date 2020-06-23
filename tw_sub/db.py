@@ -1,11 +1,4 @@
 import sqlite3
-conn = sqlite3.connect('main.db')
-from enum import Enum
-
-class FState(Enum):
-    CREATING = 'CREATING'
-    READY = 'READY'
-    UPDATING = 'UPDATING'
 
 def init_campaign_db(db_obj):
     cursor = db_obj.cursor()
@@ -38,7 +31,7 @@ def init_state_db(db_obj):
 
 def init_followers_db(db_obj, username):
     cursor = db_obj.cursor()
-    cursor.execute(''' CREATE TABLE all_followers (id int primary key, 
+    cursor.execute(''' CREATE TABLE all_followers (id text primary key, 
                                                 id_str text, 
                                                 name text,
                                                 screen_name text, 

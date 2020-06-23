@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import sqlite3, pandas as pd
 import time, json, tweepy
 from .utils import make_batches, load_state, store_state
-from .config import tweepyapi, fdb, FOLLOWERS_DB, STATE_DB, IS_AUTH, reset_tweepyapi
+from .config import get_tweepyapi, fdb, FOLLOWERS_DB, STATE_DB, reset_tweepyapi, USERNAME
 from tweepy import RateLimitError, TweepError
 from .errors import AuthFailureError
 from collections import OrderedDict
@@ -54,9 +54,8 @@ CURR_FIELDS = [ "id",  "id_str", "name",  "screen_name",  "location", "descripti
                                                 "translator_type"]
 
 class FollowersTask:
-    def __init__(self, username, stop_event=None):
+    def __init__(self, stop_event=None):
         self.task_run = stop_event if stop_event is not None else threading.Event()
-        self.auth = IS_AUTH
         self.db  = sqlite3.connect(FOLLOWERS_DB)
         state = load_state(self.db)
         self.last_run = datetime.strptime(state.get('last_run', '2010-06-16 23:57:08.027042'), '%Y-%m-%d %H:%M:%S.%f')
@@ -66,10 +65,10 @@ class FollowersTask:
         self.checkpoint = {
             'next_cursor': next_cursor
         }
-        self.tweepyapi = tweepyapi
-        self.username = username
+        self.auth, self.tweepyapi = get_tweepyapi()
+        self.username = USERNAME
         self.rate_limited = False
-        self.curr_iterator = tweepy.Cursor(self.tweepyapi.followers_ids, screen_name=self.username, cursor=self.checkpoint['next_cursor']).pages()
+        self.curr_iterator = None
 
     def run(self):
         while not self.task_run.is_set():
@@ -96,7 +95,7 @@ class FollowersTask:
                 self._create_checkpoint()
     
     def _wait_for_update(self):
-        print('_wait_for_update', self.index_status, (datetime.now() - self.last_run))
+        print("followers:: ",'_wait_for_update', self.index_status, (datetime.now() - self.last_run))
         if self.index_status == 'READY' and (datetime.now() - self.last_run) > timedelta(days=1):
             self.index_status = 'UPDATING'
         elif self.index_status == 'READY' and  (datetime.now() - self.last_run) < timedelta(days=1):
@@ -112,17 +111,22 @@ class FollowersTask:
     def _wait_till_available(self):
         while True:
             state = load_state(self.db)
-            self.index_status = state.get('index_status', 'INIT')
+            self.index_status = state.get('index_status', 'CREATING')
+            self.auth, self.tweepyapi = get_tweepyapi()
+            if self.index_status == 'INIT':
+                self.index_status = 'CREATING'
             if not self.auth:
-                time.sleep(60)
+                time.sleep(5)
                 reset_tweepyapi()
             elif self.index_status == 'READY' or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=15)):
-                time.sleep(60)
+                time.sleep(5)
             else:
+                if self.curr_iterator is None: ##because need to wait for auth
+                    self.curr_iterator = tweepy.Cursor(self.tweepyapi.followers_ids, screen_name=self.username, cursor=self.checkpoint['next_cursor']).pages()
                 return
 
     def _create_checkpoint(self):
-        print('_create_checkpoint', self.checkpoint)
+        print("followers:: ",'_create_checkpoint', self.checkpoint)
         store_state(self.db, {
             'next_cursor':  self.checkpoint['next_cursor'],
             'last_run': str(self.last_run),
@@ -149,7 +153,7 @@ class FollowersTask:
         self.db.commit()
     
     def do_task(self):
-        print('do_task', self.curr_iterator.__dict__)
+        print("followers:: ", 'do_task', self.curr_iterator.__dict__)
         internet = False
         while not internet:
             try:
@@ -174,4 +178,6 @@ class FollowersTask:
             user_results = user_results + user_ids
         self._save_data_in_db(user_results)
         self.checkpoint['next_cursor'] = self.curr_iterator.next_cursor
+        if int(self.checkpoint['next_cursor']) == 0:
+            raise StopIteration('Next Cursor is 0 now')
             

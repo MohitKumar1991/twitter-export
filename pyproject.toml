@@ -5,7 +5,7 @@ description = ""
 authors = ["Mohit Jandwani <mohitjandwani@gmail.com>"]
 
 [tool.poetry.scripts]
-runner = "tw_sub.back_main:runner"
+server = "tw_sub:start_app"
 
 [tool.poetry.dependencies]
 python = "^3.7"

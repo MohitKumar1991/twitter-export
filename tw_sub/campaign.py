@@ -5,7 +5,7 @@ import sqlite3, threading
 import time, json, tweepy
 from jinja2 import Template
 from .utils import make_batches, load_state_worker
-from .config import tweepyapi, CAMPAIGN_DB, campaign_db_worker, IS_AUTH, STATE_DB
+from .config import CAMPAIGN_DB, campaign_db_worker, get_tweepyapi, STATE_DB
 from .campdb import get_one_follower, update_follower_id, get_pending_campaigns, change_campaign_status, get_current_campaign, get_all_followers
 
 
@@ -13,9 +13,9 @@ class CampaignsTask:
     def __init__(self, stop_event:threading.Event):
         self.stop_event = stop_event
         self.rate_limited = False
-        self.auth = IS_AUTH
+        self.auth = False
         self.curr_campaign = None
-        self.tweepyapi = tweepyapi
+        self.tweepyapi = None
         self.curr_followers = None
         state = load_state_worker(campaign_db_worker)
         self.last_run = datetime.strptime(state.get('last_run', '2010-06-16 23:57:08.027042'), '%Y-%m-%d %H:%M:%S.%f')
@@ -57,7 +57,7 @@ class CampaignsTask:
         msg = t.render(follower=follower)
         print("SENDING MESSAGE", msg, follower['id'])
         time.sleep(3)
-        # self.tweepyapi.send_direct_message(str(follower['id']), msg)
+        self.tweepyapi.send_direct_message(str(follower['id']), msg)
         
 
     def _ensure_current_active_campaign(self):
@@ -75,8 +75,11 @@ class CampaignsTask:
 
     # wait for IS_AUTH, AN ACTIVE CAMPAIGN, RATE_LIMIT AND INTERNET
     def _wait_till_available(self):
+        print("campaigns", "_wait_till_available", self.auth, self.curr_campaign, self.rate_limited)
         while True:
             #keep trying for this
+            if not self.auth or self.tweepyapi is None:
+                self.auth, self.tweepyapi = get_tweepyapi()
             if self.curr_campaign is None:
                 self._ensure_current_active_campaign()
             if not self.auth or self.curr_campaign is None or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(hours=1)):

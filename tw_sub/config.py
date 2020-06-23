@@ -49,6 +49,9 @@ def reset_tweepyapi():
     return tweepyapi
 
 reset_tweepyapi()
+
+def get_tweepyapi():
+    return IS_AUTH, tweepyapi
     
 if not os.path.isfile(FOLLOWERS_DB):
     print('INITING FOLLOWERS DB')

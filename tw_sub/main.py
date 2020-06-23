@@ -5,15 +5,12 @@ import signal
 import sqlite3,pandas as pd
 import json
 from collections import OrderedDict
-import requests
-from .config import MODE, state_db_worker, fdb,fdb_worker, USERNAME, reset_tweepyapi, IS_AUTH
+from .config import MODE, state_db_worker, fdb, fdb_worker, reset_tweepyapi, IS_AUTH
 from .utils import store_state_worker, load_state_worker
 from .campdb import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, update_campaign, delete_campaign, get_followers_with_query
 from .campdb import get_followers_count_with_query
 
 app = Flask(__name__)
-
-df = pd.read_sql_query("SELECT * from all_followers", fdb)
 
 tweepyOauthHander = None
 
@@ -88,12 +85,7 @@ def followers():
 
 @app.route('/status', methods=['GET'])
 def followers_status():
-    import requests
-    try:
-        res = requests.get('http://localhost:5000/status')
-        worker_status = res.json()
-    except requests.exceptions.ConnectionError:
-        worker_status = { 'runner_status': False, 'followers_status':  'stopped', 'campaigns_status': 'stopped' }
+    worker_status = { 'runner_status': True, 'followers_status':  'stopped', 'campaigns_status': 'stopped' }
     curr_status = load_state_worker(fdb_worker)
     curr_status.update(worker_status)
     return Response(json.dumps(curr_status), mimetype='application/json')
@@ -127,6 +119,7 @@ def auth_pin():
         return Response(json.dumps({ 'error':str(te) }), mimetype='application/json', status=400)
     store_state_worker(state_db_worker, {'USER_KEY': user_key, 'USER_SECRET': user_secret})
     reset_tweepyapi()
+
     return Response(json.dumps({'user_key': user_key, 'user_secret': user_secret }), mimetype='application/json')
 
 
