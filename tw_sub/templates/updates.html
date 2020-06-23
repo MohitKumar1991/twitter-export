@@ -8,6 +8,21 @@
         <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     </head>
 <body>
+    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
+        <a class="navbar-brand" href="#">Twitter Export</a>   
+        <div class="nav-item active">
+        <a class="nav-link" href="/">Home </a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/updates">Dashboard <span class="sr-only">(current)</span></a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/search">Followers</a>
+        </div>
+        <span class="navbar-text">
+            A tool to DM your twitter followers
+        </span>
+    </nav>
     <div class="container">
         <h2 style="margin:20px;">DASHBOARD</h2>
         <div class="row">
@@ -50,6 +65,7 @@
                     });
                 window.dataTable =  $('#spreadsheet').DataTable({
                             "data": data,
+                            "searchable":false,
                             "columns": columnsMap
                         });
                 

@@ -1,25 +1,56 @@
 <html>
 <head>
     <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
 </head>
 <body>
-    <div class="container">
-    <h2 style="margin:20px">FOLLOWERS</h2>
-    <p>MAIN POINTS: 1. QUERY is anything after WHERE keyword 2. LIMIT is just a number (without the limit keyword)</p>
-    <form id="searchInput">
-        <div class="form-group">
-            <label for="">Filter Followers SQL Query</label>
-            <input type="text" class="form-control" id="query" placeholder="QUERY" value="">
-            <input type="text" class="form-control" id="limit" placeholder="LIMIT 2000 Default" value="">
+    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
+        <a class="navbar-brand" href="#">Twitter Export</a>   
+        <div class="nav-item active">
+        <a class="nav-link" href="/">Home </a>
         </div>
-        <button type="submit" class="btn btn-primary">Submit Search</button>
+        <div class="nav-item">
+        <a class="nav-link" href="/updates">Dashboard </a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
+        </div>
+        <span class="navbar-text">
+            A tool to DM your twitter followers
+        </span>
+    </nav>
+    <div class="container">
+        <h3 class="row" style="margin:20px">FILTER FOLLOWERS USING SQL</h3>
+        <div class="row">
+            <div class="col">
+                <button id="ccButton" class="btn btn-danger" data-toggle="modal" data-target="#campaignModal">Send DM to these followers</button>
+            </div>
+            <div class="col">
+                <button id="exButton" class="btn btn-warning" >Export to CSV</button>
+            </div>
+            <div class="col">
+            </div>
+        </div>
+    <p>MAIN POINTS: 1. QUERY is anything after WHERE keyword 2. LIMIT is just a number (without the limit keyword)</p>
+    <label for="searchInput">You can put your SQL Query here. It will be added to a WHERE clause. In the next one you can put LIMIT</label>
+    <form id="searchInput">
+        <div class="row">
+            
+            <div class="col">
+                <input type="text" class="form-control" id="query" placeholder="QUERY" value="">
+            </div>
+            <div class="col">
+                <input type="number" class="form-control" id="limit" placeholder="LIMIT 2000 Default" value="">
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-info">Submit Search</button>
+            </div>
+        </div>
     </form>
-    <button id="ccButton" class="btn btn-primary" data-toggle="modal" data-target="#campaignModal">Create Campaign with these followers</button>
     <div class="modal fade" id="campaignModal" tabindex="-1" role="dialog" aria-labelledby="campaignModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
@@ -43,8 +74,9 @@
           </div>
         </div>
       </div>
+      <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
     </div>
-    <table id="spreadsheet" class="display" width="90%"></table>
+    
     <script>
         window.onload = function onload() {
 

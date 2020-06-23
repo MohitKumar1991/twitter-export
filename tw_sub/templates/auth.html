@@ -6,15 +6,37 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </head>
 <body>
+    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
+        <a class="navbar-brand" href="#">Twitter Export</a>   
+        <div class="nav-item active">
+        <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/updates">Dashboard</a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/search">Followers</a>
+        </div>
+        <span class="navbar-text">
+            A tool to DM your twitter followers
+        </span>
+    </nav>
     <div class="container">
-        <h2 style="margin:20px">AUTHENTICATION</h2>
-        <p>MAIN POINTS: 1. Create an App on Twitter with Read, Write and Direct Message Permission 2. Add the keys here</p>
+        <h2 style="margin:20px">SETUP & AUTH</h2>
+        <h3>This app uses API keys to download your twitter followers</h3>
+
+        <p>How to get Consumer Key and Secret:</p>
+        <p> 1. Create an App on Twitter with Read, Write and Direct Message Permission 
+            Use this app:- https://developer.twitter.com/en/apps
+        </p>
+        <p>2. Add the keys here</p>
         <div class="row">
             <div class="col-6">
                 <form id="consumerform">
                     <div class="form-group">
-                    <label for="Consumer Keys">Consumer Keys</label>
+                    <label for="consumer-keys">Consumer Key</label>
                     <input type="text" class="form-control" id="consumer-keys" placeholder="Consumer Keys" value="{{consumer_key}}">
+                    <label for="consumer-secret">Consumer Secret</label>
                     <input type="text" class="form-control" id="consumer-secret" placeholder="Consumer Secret" value="{{consumer_secret}}">
                     <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
                     </div>
