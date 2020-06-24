@@ -2,10 +2,11 @@ from flask import url_for, Flask
 from flask import request, redirect
 from flask import Response, render_template
 import signal
-import sqlite3,pandas as pd
+import sqlite3
 import json
+from datetime import datetime
 from collections import OrderedDict
-from .config import MODE, state_db_worker, fdb, fdb_worker, reset_tweepyapi, IS_AUTH
+from .config import MODE, state_db_worker, fdb, fdb_worker, reset_tweepyapi, IS_AUTH, FOLLOWERS_DB
 from .utils import store_state_worker, load_state_worker
 from .campdb import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, update_campaign, delete_campaign, get_followers_with_query
 from .campdb import get_followers_count_with_query
@@ -14,6 +15,23 @@ app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 tweepyOauthHander = None
+
+@app.route("/export", methods=['GET'])
+def export():
+    con = sqlite3.connect(FOLLOWERS_DB)
+    query = request.args.get('query', '')
+    limit = request.args.get('limit', '')
+    if len(query) > 0:
+        query = 'WHERE ' + query
+    if len(limit) > 0:
+        limit = 'LIMIT ' + str(int(limit))
+    final_query = "SELECT * from all_followers " +  query + ' ' + limit
+    import pandas as pd
+    df = pd.read_sql_query(final_query, con)
+    filename = 'followers_{0}.csv'.format(str(datetime.now()))
+    df.to_csv(filename, index=False)
+    return Response(json.dumps({'filename': filename}), mimetype='application/json')
+
 
 @app.route("/campaigns", methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def campaigns():
