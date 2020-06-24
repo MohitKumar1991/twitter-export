@@ -24,29 +24,46 @@
         </span>
     </nav>
     <div class="container">
-        <h2 style="margin:20px;">DASHBOARD</h2>
+        <h2 style="margin:20px;"></h2>
+        <div class="row alert alert-success" role="alert">
+            <h4 class="col alert-heading col" id="indexstatus">Local Followers with {{fcount}} followers is {{index_status}}</h4>
+            <h4 class="col">Campaign status :: <span id="campaignsstatus"> </span></h4>
+            <a class="col" href="/search" target="_blank"> <button class="btn btn-info">SEE FOLLOWERS</button></a>
+        </div>
         <div class="row">
-            <div class="alert alert-success col-8" role="alert">
-                <h4 class="alert-heading" id="indexstatus">Followers Index - {{index_status}}</h4>
-                <p>You currently have {{fcount}} followers</p>
-                <p>Campaign status :: <span id="campaignsstatus"> </span></p>
-                <a href="/search" target="_blank" class="badge badge-primary">SHOW ALL FOLLOWERS</a>
-            </div>
-            <div class="card col-4" id="cdetails" style="width: 18rem;display:none">
-                <div class="card-header" id="cid">
-                Campaign ID 
-                </div>
-                <ul class="list-group list-group-flush">
-                <li class="list-group-item" id="cname">Name</li>
-                <li class="list-group-item" id="cmesg"></li>
-                <li class="list-group-item" id="cstatus">Status</li>
-                <li class="list-group-item" id="cstats">Sent to 2/54</li>
-                </ul>
+            <div class="card col-8" id="cdetails" style="width: 18rem;display:none">
+                <form>
+                    <div class="form-group row">
+                      <label for="email" class="col-sm-4 col-form-label bold">Campaign Name</label>
+                      <div class="col-sm-8">
+                        <input type="text" readonly class="form-control-plaintext" id="cname" value="">
+                      </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="message" class="col-sm-4 col-form-label">Campaign Message</label>
+                        <div class="col-sm-8">
+                          <input type="text" readonly class="form-control-plaintext" id="cmesg" value="">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="message" class="col-sm-4 col-form-label">Campaign Message</label>
+                        <div class="col-sm-8">
+                          <input type="text" readonly class="form-control-plaintext" id="cstatus" value="">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="message" class="col-sm-4 col-form-label">Total Messages Sent</label>
+                        <div class="col-sm-8">
+                          <input type="text" readonly class="form-control-plaintext" id="cstats" value="">
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
     
     <div class="container">
+        <h4 style="margin:20px;margin-left:0px;">YOUR CAMPAIGNS</h2>
         <table id="spreadsheet">
 
         </table>
@@ -80,10 +97,10 @@
                 
                 let cc = window.currCampaign;
 
-                $("#cid").text(cc.id);
-                $("#cname").text(cc.name);
-                $("#cmesg").text(cc.message_template);
-                $("#cstatus").text(cc.status);
+                $("#cid").val(cc.id);
+                $("#cname").val(cc.name);
+                $("#cmesg").val(cc.message_template);
+                $("#cstatus").val(cc.status);
 
                 let sentCount = 0;
                 let totalCount = cc.followers.length;
@@ -94,7 +111,7 @@
                     }
                 }
 
-                $("#cstats").text(`Sent ${sentCount} out of ${totalCount}`);
+                $("#cstats").val(`Sent ${sentCount} out of ${totalCount}`);
                 $("#cdetails").show();
             }
 

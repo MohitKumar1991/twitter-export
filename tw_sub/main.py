@@ -11,6 +11,7 @@ from .campdb import get_campaign_follower_details, get_campaign_details, get_all
 from .campdb import get_followers_count_with_query
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 tweepyOauthHander = None
 
