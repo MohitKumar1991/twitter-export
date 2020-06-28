@@ -1,0 +1,78 @@
+<html>
+<head>
+    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
+        <a class="navbar-brand" href="#">Twitter Export</a>   
+        <div class="nav-item active">
+        <a class="nav-link" href="/">Home </a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/updates">Dashboard </a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link" href="/emails">Emails <span class="sr-only">(current)</span></a>
+        </div>
+        <span class="navbar-text">
+            A tool to DM your twitter followers
+        </span>
+    </nav>
+    <div class="container">
+        <h3 class="row" style="margin:20px">YOUR SUBSCRIBED EMAILS </h3>
+        <p>EMAILS AND LINKS FOR YOU</p>
+        <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+    </div>
+
+
+    <script>
+        window.onload = function onload() {
+
+            var dataTable = null;
+
+            function getEmails(query, limit) {
+
+                    $.get({
+                        url:'/proxy/emails', 
+                        data: {
+                            root_created_by : "{{username}}"
+                        },
+                        success: function(data){
+                            console.log('data', data);
+                            if (data.length > 0) {
+                            var columns = Object.keys(data[0])
+                                var columnsMap = columns.map(function(d){ return { 'data': d, 'title': d }; });
+                                data = Object.keys(data).map(function(dk) {
+                                    return data[dk];
+                                });
+                                if(dataTable === null) {
+                                    dataTable = $('#spreadsheet').DataTable({
+                                        "data": data,
+                                        "columns": columnsMap
+                                    });
+                                }
+                            }
+                        },
+                        error: function(err) {
+                            console.log(err);
+                            alert('failed to get errors');
+                        }
+                    });
+            }
+
+
+            getEmails();
+
+        }
+     </script>
+
+</body>
+</html>

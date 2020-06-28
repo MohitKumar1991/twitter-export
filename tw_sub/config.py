@@ -26,7 +26,7 @@ tweepyapi = None
 IS_AUTH = False
 
 def reset_tweepyapi():
-    global IS_AUTH, tweepyapi, _auth, state_db_worker
+    global IS_AUTH, tweepyapi, _auth, state_db_worker, USERNAME
     curr_state = load_state_worker(state_db_worker)
     if 'CONSUMER_KEY' in curr_state and 'CONSUMER_SECRET_KEY' in curr_state:
         _auth = tweepy.OAuthHandler(curr_state['CONSUMER_KEY'], curr_state['CONSUMER_SECRET_KEY'])

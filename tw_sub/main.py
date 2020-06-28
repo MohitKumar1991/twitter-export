@@ -1,7 +1,7 @@
 from flask import url_for, Flask
 from flask import request, redirect
 from flask import Response, render_template
-import signal
+import signal, requests
 import sqlite3
 import json
 from datetime import datetime
@@ -15,6 +15,34 @@ app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 tweepyOauthHander = None
+
+SITE_NAME = 'https://twitter-export.herokuapp.com/'
+
+@app.route("/proxy/<path:path>",methods=['GET','POST','DELETE'])
+def proxy(path):
+    global SITE_NAME
+    if request.method=='GET':
+        resp = requests.get(f'{SITE_NAME}{path}',params=request.args)
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        headers = [(name, value) for (name, value) in  resp.raw.headers.items() if name.lower() not in excluded_headers]
+        response = Response(resp.content, resp.status_code, headers)
+        return response
+    elif request.method=='POST':
+        resp = requests.post(f'{SITE_NAME}{path}',json=request.get_json())
+        print('RETURNED', f'{SITE_NAME}{path}', request.get_json(), resp.content)
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+        headers = [(name, value) for (name, value) in resp.raw.headers.items() if name.lower() not in excluded_headers]
+        response = Response(resp.content, resp.status_code, headers)
+        return response
+    elif request.method=='DELETE':
+        resp = requests.delete(f'{SITE_NAME}{path}').content
+        response = Response(resp.content, resp.status_code, headers)
+        return response
+
+@app.route("/emails", methods=['GET'])
+def subemails():
+    from .config import USERNAME
+    return render_template('emails.html',username=USERNAME)
 
 @app.route("/export", methods=['GET'])
 def export():
@@ -111,7 +139,8 @@ def followers_status():
 
 @app.route("/search", methods=['GET'])
 def dashboard():
-    return render_template('main.html')
+    from .config import USERNAME
+    return render_template('main.html',username=USERNAME)
 
 @app.route("/updates", methods=['GET'])
 def updates():

@@ -17,7 +17,10 @@
         <a class="nav-link" href="/updates">Dashboard </a>
         </div>
         <div class="nav-item">
-        <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link" href="/emails">Emails <span class="sr-only">(current)</span></a>
         </div>
         <span class="navbar-text">
             A tool to DM your twitter followers
@@ -63,11 +66,14 @@
             </div>
             <form id="cModal">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="cname" placeholder="Campaign Name" value="">
+                    <p class="form-group">
+                        <input type="text" class="form-control" id="cname" placeholder="Campaign Name" value="Send DM To Followers">
                         <textarea class="form-control" id="cmesg" placeholder="Campaign Message" rows="5"></textarea>
-                    </div>
+                    </p>
+                    <label class="mr-sm-2">Your Subscription Link</label>
+                    <p id="aflink"></p>
                 </div>
+                
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Create</button>
                 </div>
@@ -103,6 +109,7 @@
             window.currentFollowers = [];
             var dataTable = null;
             window.exporting = false;
+            window.myAFlink = '';
 
             $('#ccButton').click(function() {
                 $('#campaignModal').modal('show');
@@ -156,6 +163,27 @@
                         }
                     });
             });
+
+            function getAfLink(){
+                $.ajax({
+                        type: "POST",
+                        url: '/proxy/link',
+                        contentType: 'application/json',
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                                'created_by': "{{username}}"
+                        }),
+                        success:function(data){
+                            console.log('aflink data', data);
+                            window.myAFlink = 'https://twitter-export.herokuapp.com/l/'+data.url;
+                            $('#aflink').text(window.myAFlink);
+                            $('#cmesg').text("Hi there! Would you like to be part of my personal email list? You can subscribe here \n "+ window.myAFlink)
+                        },
+                        error:function(err) {
+                            alert(`Could not get your affiliate link`);
+                        }
+                    });
+            }
 
             function getFollowers(query, limit) {
 
@@ -228,7 +256,9 @@
                 }
 
 
-            getFollowers('','')
+            getFollowers('','');
+
+            getAfLink();
 
         }
      </script>
