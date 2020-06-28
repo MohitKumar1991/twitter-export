@@ -30,9 +30,10 @@
                 <button id="ccButton" class="btn btn-danger" data-toggle="modal" data-target="#campaignModal">Send DM to these followers</button>
             </div>
             <div class="col">
-                <button id="exButton" class="btn btn-warning" >Export to CSV</button>
+                <button id="exButton" class="btn btn-warning" >Export Filtered Followers (CSV) </button>
             </div>
             <div class="col">
+                <button id="exAllButton" class="btn btn-info" >Export All Followers (CSV)</button>
             </div>
         </div>
     <p>MAIN POINTS: 1. QUERY is anything after WHERE keyword 2. LIMIT is just a number (without the limit keyword)</p>
@@ -76,15 +77,50 @@
       </div>
       <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
     </div>
+    
+      <div class="modal" id="successModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Success!</h5>
+              <button type="button" id="smclose" class="close" data-dismiss="modal" data-target="#successModal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p id="exmsg"></p>
+            </div>
+          </div>
+        </div>
+     </div>
+      <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+    </div>
+
 
     <script>
         window.onload = function onload() {
 
             window.currentFollowers = [];
             var dataTable = null;
+            window.exporting = false;
 
             $('#ccButton').click(function() {
                 $('#campaignModal').modal('show');
+            });
+
+            $('#exButton').click(function(){
+                var query = $('#query').val();
+                var limit = $('#limit').val();
+                exportFollowers(query, limit);
+            });
+            $('#exAllButton').click(function(){
+                var query = $('#query').val();
+                var limit = $('#limit').val();
+                exportFollowers('', '');
+            });
+
+            $("#smclose").click(function(){
+                $('#successModal').hide();
             });
 
             $('#searchInput').submit(function(e) {
@@ -168,6 +204,29 @@
                         }
                     });
             }
+
+            function exportFollowers(query, limit) {
+                if(!window.exporting){
+                    $.get({
+                        url:'/export', 
+                            data: {
+                                query:  query,
+                                limit: limit
+                            },
+                            success: function(data){
+                                window.exporting = false;
+                                $('#exmsg').text('Exported to file '+ data.filename);
+                                $('#successModal').show();
+                            },
+                            error:function(error){
+                                alert('Export Failed');
+                                window.exporting = false;
+                                console.log(error);
+                            }
+                        });
+                    }
+                }
+
 
             getFollowers('','')
 
