@@ -1,84 +1,48 @@
-import sqlite3, tweepy, os
-from sqlite3worker import Sqlite3Worker
-from .db import init_followers_db, init_campaign_db, init_state_db
-from .utils import load_state, store_state, load_state_worker
-from tweepy.error import TweepError
+import os
+import logging
 
-MODE = os.environ.get('MODE','ALL') #ALL, SERVER, INDEX
+env = os.environ.get("ENV", "dev")
 
-FOLLOWERS_DB = 'followers.db'
-CAMPAIGN_DB = 'campaign.db'
-STATE_DB = 'state.db'
-USERNAME = ''
+class Config:
+    """
+    Base Configuration
+    """
 
-if not os.path.isfile(STATE_DB):
-    state_db = sqlite3.connect(STATE_DB)
-    init_state_db(state_db)
-    state_db_worker = Sqlite3Worker(STATE_DB)
+    # CHANGE SECRET_KEY!! I would use sha256 to generate one and set this as an environment variable
+    # Exmaple to retrieve env variable `SECRET_KEY`: os.environ.get("SECRET_KEY")
+    secret_key = "testkey"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    LOG_FILE = "api.log"  # where logs are outputted to
+
+
+class DevelopmentConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///./common.db'
+    SQLALCHEMY_CONNECT_ARGS = {"check_same_thread": False }
+    DEBUG = True
+
+
+class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL",  "postgresql://testusr:password@127.0.0.1:5432/testdb"
+    )  # you may do the same as the development config but this currently gets the database URL from an env variable
+    SQLALCHEMY_CONNECT_ARGS = { }
+    HTTP_USERNAME = os.environ.get(
+        "BASIC_USERNAME", "noob"
+    )
+    HTTP_PASSWORD = os.environ.get(
+        "BASIC_PASSWORD", "nommr"
+    )
+    DEBUG = False
+
+core_logger = logging.getLogger("core")
+
+if env == 'dev':
+    config = DevelopmentConfig
+elif env == 'prod':
+    config = ProductionConfig
 else:
-    state_db = sqlite3.connect(STATE_DB)
-    state_db_worker = Sqlite3Worker(STATE_DB)
+    raise Exception('Invalid Environment')
 
-curr_state = load_state(state_db)
-
-_auth = None
-tweepyapi = None
-IS_AUTH = False
-
-def reset_tweepyapi():
-    global IS_AUTH, tweepyapi, _auth, state_db_worker, USERNAME
-    curr_state = load_state_worker(state_db_worker)
-    if 'CONSUMER_KEY' in curr_state and 'CONSUMER_SECRET_KEY' in curr_state:
-        _auth = tweepy.OAuthHandler(curr_state['CONSUMER_KEY'], curr_state['CONSUMER_SECRET_KEY'])
-
-    if _auth is not None and 'USER_KEY' in curr_state and 'USER_SECRET' in curr_state:
-        _auth.set_access_token(curr_state['USER_KEY'], curr_state['USER_SECRET'])
-        tweepyapi = tweepy.API(_auth)
-        try:
-            myuser = tweepyapi.me()
-            IS_AUTH = True
-            USERNAME = myuser.screen_name #'balajis'
-            return True
-        except TweepError as e:
-            print(e)
-            if e.args[0][0]['code'] == 89:
-                IS_AUTH = False
-            else:
-                raise e
-            return False
-    return tweepyapi
-
-reset_tweepyapi()
-
-def get_tweepyapi():
-    return IS_AUTH, tweepyapi
-    
-if not os.path.isfile(FOLLOWERS_DB):
-    print('INITING FOLLOWERS DB')
-    fdb = sqlite3.connect(FOLLOWERS_DB)
-    init_followers_db(fdb, USERNAME)
-    fdb_worker = Sqlite3Worker(FOLLOWERS_DB)
-else:
-    fdb = sqlite3.connect(FOLLOWERS_DB)
-    fdb_worker = Sqlite3Worker(FOLLOWERS_DB)
-
-#Monkey Patching
-fdb_worker._sqlite3_conn.row_factory = sqlite3.Row
-fdb_worker._sqlite3_cursor = fdb_worker._sqlite3_conn.cursor()
-
-
-if not os.path.isfile(CAMPAIGN_DB):
-    campaign_db = sqlite3.connect(CAMPAIGN_DB)
-    init_campaign_db(campaign_db)
-    campaign_db_worker = Sqlite3Worker(CAMPAIGN_DB)
-else:
-    campaign_db = sqlite3.connect(CAMPAIGN_DB)
-    campaign_db_worker = Sqlite3Worker(CAMPAIGN_DB)
-
-
-#TODO - Create flow for generating the keys
-
-
-
+print("CONFIG LOADED", config)
 
 

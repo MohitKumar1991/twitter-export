@@ -6,62 +6,51 @@ import sqlite3
 import json
 from datetime import datetime
 from collections import OrderedDict
-from .config import MODE, state_db_worker, fdb, fdb_worker, reset_tweepyapi, IS_AUTH, FOLLOWERS_DB
-from .utils import store_state_worker, load_state_worker
-from .campdb import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, update_campaign, delete_campaign, get_followers_with_query
-from .campdb import get_followers_count_with_query
+from .mytweepy import twpy
+from .utils import store_state, load_state, convert_to_csv
+from .dbutils import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, delete_campaign, get_followers_with_query
+from .dbutils import get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
 
 app = Flask(__name__)
+
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-tweepyOauthHander = None
-
-SITE_NAME = 'https://twitter-export.herokuapp.com/'
-
-@app.route("/proxy/<path:path>",methods=['GET','POST','DELETE'])
-def proxy(path):
-    global SITE_NAME
-    if request.method=='GET':
-        resp = requests.get(f'{SITE_NAME}{path}',params=request.args)
-        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in  resp.raw.headers.items() if name.lower() not in excluded_headers]
-        response = Response(resp.content, resp.status_code, headers)
-        return response
-    elif request.method=='POST':
-        resp = requests.post(f'{SITE_NAME}{path}',json=request.get_json())
-        print('RETURNED', f'{SITE_NAME}{path}', request.get_json(), resp.content)
-        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        headers = [(name, value) for (name, value) in resp.raw.headers.items() if name.lower() not in excluded_headers]
-        response = Response(resp.content, resp.status_code, headers)
-        return response
-    elif request.method=='DELETE':
-        resp = requests.delete(f'{SITE_NAME}{path}').content
-        response = Response(resp.content, resp.status_code, headers)
-        return response
-
-@app.route("/emails", methods=['GET'])
+@app.route("/email", methods=['GET'])
 def subemails():
-    from .config import USERNAME
-    return render_template('emails.html',username=USERNAME)
+    state = load_state()
+    return render_template('emails.html',username=state.get('username', ''))
+
+#get all emails submitted for a particular user
+@app.route("/emails", methods=["GET"])
+def getemails():
+    # root_created_by = load_state().get('username', None)
+    # if root_created_by is None:
+    #     return Response(json.dumps({'error': 'need subscriber' }), mimetype='application/json', status=400)
+    # all_links = get_all_links_created_by(root_created_by)
+    # #get all the emails for these links
+    # all_link_ids = ( l.id for l in all_links )
+    emails = get_all_emails()
+    return Response(json.dumps(emails), mimetype='application/json', status=200)
+
 
 @app.route("/export", methods=['GET'])
 def export():
-    con = sqlite3.connect(FOLLOWERS_DB)
     query = request.args.get('query', '')
     limit = request.args.get('limit', '')
     if len(query) > 0:
         query = 'WHERE ' + query
     if len(limit) > 0:
-        limit = 'LIMIT ' + str(int(limit))
-    final_query = "SELECT * from all_followers " +  query + ' ' + limit
-    import pandas as pd
-    df = pd.read_sql_query(final_query, con)
+        limit = 'LIMIT ' + str(int(limit))  
+    final_query =  query + ' ' + limit
+    followers = get_followers_with_query(final_query)
     filename = 'followers_{0}.csv'.format(str(datetime.now()))
-    df.to_csv(filename, index=False)
+    is_done = convert_to_csv(filename, followers)
+    if not is_done:
+        return Response(json.dumps({'error': 'Could not export'}), mimetype='application/json', status=400) 
     return Response(json.dumps({'filename': filename}), mimetype='application/json')
 
 
-@app.route("/campaigns", methods=['GET', 'POST', 'PATCH', 'DELETE'])
+@app.route("/campaigns", methods=['GET', 'POST', 'DELETE'])
 def campaigns():
     if request.method == 'GET':
         campaign_id = request.args.get('campaign_id',None)
@@ -85,17 +74,6 @@ def campaigns():
         }, followers)
         insert_campaign_followers(campaign_id, followers)
         return Response(json.dumps({ 'campaign_id': campaign_id }), mimetype='application/json')
-    
-    elif request.method == 'PATCH':
-        body = request.json
-        message = body.get('message_template', None)
-        campaign_name = body.get('campaign_name', None)
-        campaign_id = body.get('campaign_id')
-        campaign_details = get_campaign_details(campaign_id)
-        del campaign_details['followers']
-        campaign_details.update(body)
-        update_campaign(campaign_details)
-        return Response(json.dumps(campaign_details), mimetype='application/json')
     
     elif request.method == 'DELETE':
         campaign_id = request.args.get('campaign_id',None)
@@ -133,24 +111,24 @@ def followers():
 @app.route('/status', methods=['GET'])
 def followers_status():
     worker_status = { 'runner_status': True, 'followers_status':  'stopped', 'campaigns_status': 'stopped' }
-    curr_status = load_state_worker(fdb_worker)
+    curr_status = load_state()
     curr_status.update(worker_status)
     return Response(json.dumps(curr_status), mimetype='application/json')
 
 @app.route("/search", methods=['GET'])
 def dashboard():
-    from .config import USERNAME
-    return render_template('main.html',username=USERNAME)
+    username = load_state().get('username','')
+    return render_template('main.html',username=username)
 
 @app.route("/updates", methods=['GET'])
 def updates():
-    curr_status = load_state_worker(fdb_worker)
+    curr_status = load_state()
     fcount = get_followers_count_with_query('')
     return render_template('updates.html', **curr_status, fcount=fcount)
 
 @app.route("/auth", methods=['GET'])
 def auth():
-    curr_state = load_state_worker(state_db_worker)
+    curr_state = load_state()
     return render_template('auth.html', **{ 'consumer_key':  curr_state.get('CONSUMER_KEY', None), 'consumer_secret': curr_state.get('CONSUMER_SECRET_KEY', None) })
 
 @app.route("/auth_pin", methods=['GET'])
@@ -161,46 +139,101 @@ def auth_pin():
     import tweepy
     from tweepy.error import TweepError
     try:
-        user_key, user_secret = tweepyOauthHander.get_access_token(pin)
+        twpy.set_pin_and_init(pin)
     except TweepError as te:
         print(te)
         return Response(json.dumps({ 'error':str(te) }), mimetype='application/json', status=400)
-    store_state_worker(state_db_worker, {'USER_KEY': user_key, 'USER_SECRET': user_secret})
-    reset_tweepyapi()
-
-    return Response(json.dumps({'user_key': user_key, 'user_secret': user_secret }), mimetype='application/json')
+    return Response(json.dumps({'success': 'true' }), mimetype='application/json')
 
 
 @app.route("/auth_link", methods=['GET'])
 def auth_link():
-    global tweepyOauthHander
     consumer_key = request.args.get('consumer_key', None)
     consumer_secret = request.args.get('consumer_secret', None)
     if consumer_key is None or consumer_secret is None:
         return Response(json.dumps({'error': True}), mimetype='application/json', status=400)
-    import tweepy
-    from tweepy.error import TweepError
-    try:
-        tweepyOauthHander = tweepy.OAuthHandler(consumer_key, consumer_secret, callback='oob')
-        auth_url = tweepyOauthHander.get_authorization_url()
-    except TweepError as te:
-        print(te)
-        return Response(json.dumps({ 'error':str(te) }), mimetype='application/json', status=400)
-    store_state_worker(state_db_worker, { 'CONSUMER_KEY':consumer_key, 
-                            'CONSUMER_SECRET_KEY':consumer_secret 
-                        })
+    
+    auth_url = twpy.init_oauth(consumer_key, consumer_secret)
+    if auth_url is None:
+        return Response(json.dumps({ 'error':'failed' }), mimetype='application/json', status=400)
+        
+    store_state({   
+                    'CONSUMER_KEY':consumer_key, 
+                    'CONSUMER_SECRET_KEY':consumer_secret 
+                })
     return Response(json.dumps({'auth_url': auth_url}), mimetype='application/json')
+
+
+# function that is called when you visit /
+@app.route("/link", methods=["GET"])
+def index():
+    # just show a nice page saying what this is
+    return render_template('link.html')
+
+# create new af link - takes either the username of the person or another af link
+@app.route("/links", methods=["GET"])
+def alllinks():
+    links = get_all_links()
+    return Response(json.dumps(links), mimetype='application/json', status=200)
+
+# create new af link - takes either the username of the person or another af link
+@app.route("/link", methods=["POST"])
+def createlink():
+    body = request.json
+    
+    if 'created_by' not in body:
+        state = load_state()
+        created_by = state.get('username')
+    else:
+        created_by = body.get('created_by')
+    original_user = None
+    #username is who is generating the link once he submits email
+    if 'parent_link_id' in body and len(body['parent_link_id']) > 0:
+        link_id = body['parent_link_id']
+    else:
+        link_id = None
+
+    new_link = create_link(created_by, link_id)
+    return Response(json.dumps(new_link.to_dict()), mimetype='application/json', status=200)
+
+# take email and the link for which the email was submitted
+@app.route("/email", methods=["POST"])
+def email():
+    body = request.json
+    if 'email' not in body or 'link_id' not in body or 'username' not in body:
+        return Response(json.dumps({'error': 'need both email and which link this email was given to' }), mimetype='application/json', status=400)
+    link_id = body['link_id']
+    link = get_link(id=int(link_id))
+    submitted_email = create_email({
+        'email': body.get('email'),
+        'parent_link_id': link.id,
+        'name': body.get('name','')
+    })
+    username =  body.get('username')
+    # submitted_email = Email.query.filter_by(parent_link_id=link.id, email=email).first()
+    aflink = create_link(username, link_id)
+    return Response(json.dumps({ 'email': submitted_email.to_dict(), 'aflink': aflink.to_dict() }), mimetype='application/json', status=200)
+
+
+#render the page to submit one's email
+@app.route("/l/<linkurl>", methods=["GET"])
+def rendersubmit(linkurl):
+    link = get_link(url=linkurl)
+    username = load_state().get('username')
+    if link is None:
+        return Response(json.dumps({'error': 'wrong link url' }), mimetype='application/json', status=404)
+    return render_template('submit.html', link_id=link.id, username=username)
+
 
 @app.route("/", methods=['GET'])
 def rootpath():
-    if IS_AUTH:
+    state = load_state()
+    if state.get('is_auth','false') == 'true':
         return redirect('/updates')
     else:
         return redirect('/auth')
 
-# def shutdown(sig, stackframe):
-#     print("SHUTTING DOWN")
 
 
-# signal.signal(signal.SIGINT, shutdown)
+
 

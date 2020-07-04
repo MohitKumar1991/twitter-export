@@ -142,7 +142,7 @@
                 var cname = $('#cname').val();
                 var cmesg = $('#cmesg').val();
                 var follower_ids = window.currentFollowers.map(function(cf){
-                    return cf.id;
+                    return cf.id_str;
                 });
                 $.ajax({
                         type: "POST",
@@ -167,7 +167,7 @@
             function getAfLink(){
                 $.ajax({
                         type: "POST",
-                        url: '/proxy/link',
+                        url: '/link',
                         contentType: 'application/json',
                         dataType: "json",
                         data: JSON.stringify({ 
@@ -175,7 +175,7 @@
                         }),
                         success:function(data){
                             console.log('aflink data', data);
-                            window.myAFlink = 'https://twitter-export.herokuapp.com/l/'+data.url;
+                            window.myAFlink = '/l/'+data.url;
                             $('#aflink').text(window.myAFlink);
                             $('#cmesg').text("Hi there! Would you like to be part of my personal email list? You can subscribe here \n "+ window.myAFlink)
                         },

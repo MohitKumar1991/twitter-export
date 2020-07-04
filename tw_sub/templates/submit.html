@@ -1,0 +1,79 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    </head>
+<body>
+    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
+        <a class="navbar-brand" href="#">Twitter Export</a>   
+        <div class="nav-item active">
+        <a class="nav-link" href="/">Home </a>
+        </div>
+        <div class="nav-item">
+        <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
+        </div>
+        <span class="navbar-text">
+            A tool to DM your twitter followers
+        </span>
+    </nav>
+    <div class="container">
+        <h2 style="margin:20px;"></h2>
+        <div id="submitemail-group">
+            <h3 for="submitemail-msg">Subscribe to {{orig_created_by}} here!</h3>
+            <form id="submitemail" style="width:300px;margin-top:30px;">
+                    <input type="hidden" class="form-control" id="link_id" placeholder="LinkId" value="{{link_id}}">
+                    <div class="form-group">
+                        <input type="email" class="form-control" id="email" placeholder="Email" value="">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="name" placeholder="Name" value="">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="username" placeholder="twitter username" value="{{username}}">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-info">Submit</button>
+                    </div>
+            </form>
+        </div>
+        <div id="successmsg" style="display:none">
+            <h2> Thank you for your subsciption!!</h2>
+            <p> You can use this affiliate link to get more subscribers on board. </p>
+            <p id="aflink"></p>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() {
+
+            $('#submitemail').submit(function formsubmit(e) {
+                e.preventDefault();
+                $.ajax({
+                        type: "POST",
+                        url: '/email',
+                        contentType: 'application/json',
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                                'email': $('#email').val(), 
+                                'name': $('#name').val(), 
+                                'username': $('#username').val(),
+                                'link_id': $('#link_id').val()
+                            }),
+                        success:function(data){
+                            $('#successmsg').show();
+                            $("#submitemail-group").hide();
+                            var url = window.location.protocol + '//' + window.location.host + '/l/'+data.aflink.url;
+                            $('#aflink').text(url);
+                        },
+                        error:function(err) {
+                            alert(`There was an error in submitting ${err}`);
+                        }
+                    });
+                
+            });
+        }
+     </script>
+</body>
+</html>

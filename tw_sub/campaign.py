@@ -1,28 +1,22 @@
 from datetime import datetime, timedelta
 from tweepy import RateLimitError, TweepError 
 from .errors import AuthFailureError
-import sqlite3, threading
+import threading
 import time, json, tweepy
 from jinja2 import Template
-from .utils import make_batches, load_state_worker
-from .config import CAMPAIGN_DB, campaign_db_worker, get_tweepyapi, STATE_DB
-from .campdb import get_one_follower, update_follower_id, get_pending_campaigns, change_campaign_status, get_current_campaign, get_all_followers
-
+from .utils import make_batches, load_state
+from .mytweepy import twpy
+from .dbutils import get_one_follower, update_follower_id, get_pending_campaigns, change_campaign_status, get_current_campaign, get_all_followers
 
 class CampaignsTask:
     def __init__(self, stop_event:threading.Event):
         self.stop_event = stop_event
         self.rate_limited = False
-        self.auth = False
         self.curr_campaign = None
-        self.tweepyapi = None
         self.curr_followers = None
-        state = load_state_worker(campaign_db_worker)
+        state = load_state()
         self.last_run = datetime.strptime(state.get('last_run', '2010-06-16 23:57:08.027042'), '%Y-%m-%d %H:%M:%S.%f')
         #if there is no campaign active then turn one into active
-        # self.tweepyapi = None # get from somewhere
-        # self.curr_iterator = None
-        #api.send_direct_message("1273873629969776641", "Hey! Nice to see you.")
 
     def stop(self):
         self.stop_event.set()
@@ -38,13 +32,11 @@ class CampaignsTask:
                 print("RateLimitError", rle)
                 self.rate_limited = True
             except AuthFailureError as afe:
-                self.auth = False
-                state_db = sqlite3.connect(STATE_DB)
-                curr_state_db = store_state(state_db, {
+                twpy.clear_auth()
+                store_state({
                     'USER_KEY': '',
                     'USER_SECRET': ''
                 })
-                state_db.close()
             self._create_checkpoint()
 
     def _send_message(self, campaign_follower):
@@ -56,8 +48,7 @@ class CampaignsTask:
             return
         msg = t.render(follower=follower)
         print("SENDING MESSAGE", msg, follower['id'])
-        time.sleep(3)
-        self.tweepyapi.send_direct_message(str(follower['id']), msg)
+        twpy.tweepyapi.send_direct_message(str(follower['id']), msg)
         
 
     def _ensure_current_active_campaign(self):
@@ -75,14 +66,14 @@ class CampaignsTask:
 
     # wait for IS_AUTH, AN ACTIVE CAMPAIGN, RATE_LIMIT AND INTERNET
     def _wait_till_available(self):
-        print("campaigns", "_wait_till_available", self.auth, self.curr_campaign, self.rate_limited)
+        print("campaigns", "_wait_till_available", self.curr_campaign, self.rate_limited)
         while True:
             #keep trying for this
-            if not self.auth or self.tweepyapi is None:
-                self.auth, self.tweepyapi = get_tweepyapi()
+            if not twpy.is_auth:
+                twpy.try_init()
             if self.curr_campaign is None:
                 self._ensure_current_active_campaign()
-            if not self.auth or self.curr_campaign is None or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(hours=1)):
+            if not twpy.is_auth or self.curr_campaign is None or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(hours=1)):
                 time.sleep(5)
             else:
                 return
@@ -97,7 +88,7 @@ class CampaignsTask:
             self.curr_followers = None
     
     def _mark_as_done(self, campaign_id, follower_id):
-        update_follower_id(str(campaign_id), follower_id, 'done', str(datetime.now()))
+        update_follower_id(str(campaign_id), follower_id, 'done', datetime.now())
     
     #send a message to a batch of followers, then their sent_time and status in the db
     def do_task(self):

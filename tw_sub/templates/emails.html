@@ -41,10 +41,7 @@
             function getEmails(query, limit) {
 
                     $.get({
-                        url:'/proxy/emails', 
-                        data: {
-                            root_created_by : "{{username}}"
-                        },
+                        url:'/emails',
                         success: function(data){
                             console.log('data', data);
                             if (data.length > 0) {

@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 import sqlite3, pandas as pd
 import time, json, tweepy
 from .utils import make_batches, load_state, store_state
-from .config import get_tweepyapi, fdb, FOLLOWERS_DB, STATE_DB, reset_tweepyapi, USERNAME
+from .mytweepy import twpy 
+from .models import scopedsession, Followers
 from tweepy import RateLimitError, TweepError
 from .errors import AuthFailureError
 from collections import OrderedDict
@@ -56,8 +57,7 @@ CURR_FIELDS = [ "id",  "id_str", "name",  "screen_name",  "location", "descripti
 class FollowersTask:
     def __init__(self, stop_event=None):
         self.task_run = stop_event if stop_event is not None else threading.Event()
-        self.db  = sqlite3.connect(FOLLOWERS_DB)
-        state = load_state(self.db)
+        state = load_state()
         self.last_run = datetime.strptime(state.get('last_run', '2010-06-16 23:57:08.027042'), '%Y-%m-%d %H:%M:%S.%f')
         self.index_status = state.get('index_status', 'INIT')
         next_cursor = state.get('next_cursor', None)
@@ -65,12 +65,12 @@ class FollowersTask:
         self.checkpoint = {
             'next_cursor': next_cursor
         }
-        self.auth, self.tweepyapi = get_tweepyapi()
-        self.username = USERNAME
+        self.twpy = twpy
         self.rate_limited = False
         self.curr_iterator = None
 
     def run(self):
+        print('FOLLOWRS RUN')
         while not self.task_run.is_set():
             self._wait_till_available()
             try:
@@ -80,13 +80,11 @@ class FollowersTask:
                 print("RateLimitError", rle)
                 self.rate_limited = True
             except AuthFailureError as afe:
-                self.auth = False
-                state_db = sqlite3.connect(STATE_DB)
-                curr_state_db = store_state(state_db, {
+                twpy.clear_auth()
+                store_state({
                     'USER_KEY': '',
                     'USER_SECRET': ''
                 })
-                state_db.close()
             except StopIteration as si:
                 if self.index_status == 'UPDATING' or self.index_status == 'CREATING':
                     self.index_status = 'READY'
@@ -109,48 +107,47 @@ class FollowersTask:
         self.task_run.set()
     
     def _wait_till_available(self):
+        print('_wait_till_available')
         while True:
-            state = load_state(self.db)
+            state = load_state()
             self.index_status = state.get('index_status', 'CREATING')
-            self.auth, self.tweepyapi = get_tweepyapi()
+            if not self.twpy.is_auth:
+                self.twpy.try_init()
             if self.index_status == 'INIT':
                 self.index_status = 'CREATING'
-            if not self.auth:
+            if not self.twpy.is_auth:
                 time.sleep(5)
-                reset_tweepyapi()
+                self.twpy.try_init()
             elif self.index_status == 'READY' or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=15)):
                 time.sleep(5)
             else:
                 if self.curr_iterator is None: ##because need to wait for auth
-                    self.curr_iterator = tweepy.Cursor(self.tweepyapi.followers_ids, screen_name=self.username, cursor=self.checkpoint['next_cursor']).pages()
+                    self.curr_iterator = tweepy.Cursor(self.twpy.tweepyapi.followers_ids, screen_name=self.twpy.username, cursor=self.checkpoint['next_cursor']).pages()
                 return
 
     def _create_checkpoint(self):
         print("followers:: ",'_create_checkpoint', self.checkpoint)
-        store_state(self.db, {
+        store_state({
             'next_cursor':  self.checkpoint['next_cursor'],
             'last_run': str(self.last_run),
             'index_status': self.index_status
         })
     
-    def _save_data_in_db(self, data):
-        cursor = self.db.cursor()
+    def _save_in_db(self, data):
+        print('SAVE IN DATA', data)
         for d in data:
-            d = OrderedDict(d._json)
-            k_to_remove = []
+            d = d._json
             for k in d:
                 if k not in CURR_FIELDS:
                     k_to_remove.append(k)
             for k in k_to_remove:
                 del d[k]
+            d['id'] = str(d['id'])
             d['entities'] = json.dumps(d['entities'])
             if 'status' in d:
                 del d['status']
-            columns = ', '.join(d.keys())
-            placeholders = ':'+', :'.join(d.keys())
-            query = 'INSERT OR REPLACE INTO all_followers (%s) VALUES (%s)' % (columns, placeholders)
-            cursor.execute(query, d)
-        self.db.commit()
+            scopedsession.merge(Followers(**d))
+        scopedsession.commit()
     
     def do_task(self):
         print("followers:: ", 'do_task', self.curr_iterator.__dict__)
@@ -167,16 +164,16 @@ class FollowersTask:
             internet = False
             while not internet:
                 try:
-                    user_ids = self.tweepyapi.lookup_users(btch)
+                    user_ids = self.twpy.tweepyapi.lookup_users(btch)
                     internet = True
                 except TweepError as e:
                     print(e)
                     if e.args[0][0]['code'] == 89:
-                        self._auth = False
+                        twpy.clear_auth()
                         raise AuthFailureError(e)
                     time.sleep(10)
             user_results = user_results + user_ids
-        self._save_data_in_db(user_results)
+        self._save_in_db(user_results)
         self.checkpoint['next_cursor'] = self.curr_iterator.next_cursor
         if int(self.checkpoint['next_cursor']) == 0:
             raise StopIteration('Next Cursor is 0 now')
