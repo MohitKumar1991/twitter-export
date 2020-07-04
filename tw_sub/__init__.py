@@ -1,5 +1,9 @@
 __version__ = '0.1.0'
 
+def recreate_db():
+    from .models import Base, engine
+    Base.metadata.create_all(engine)
+
 def start_worker():
     import time, sys
     import signal

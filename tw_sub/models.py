@@ -136,4 +136,3 @@ class Link(Base, DictMixIn):
 
     def __repr__(self):
         return f"<Link {self.id} {self.desc} by {self.created_by}>"
-Base.metadata.create_all(engine)

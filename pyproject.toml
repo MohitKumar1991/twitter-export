@@ -7,6 +7,7 @@ authors = ["Mohit Jandwani <mohitjandwani@gmail.com>"]
 [tool.poetry.scripts]
 server = "tw_sub:start_app"
 worker = "tw_sub:start_worker"
+recreate_db = "tw_sub:recreate_db"
 
 [tool.poetry.dependencies]
 python = "3.8.3"
