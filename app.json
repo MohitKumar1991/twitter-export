@@ -9,7 +9,7 @@
     "repository": "https://github.com/MohitKumar1991/twitter-export",
     "success_url": "/",
     "scripts": {
-        "postdeploy": "poetry run recreate_db"
+        "postdeploy": "sh ./db_setup.sh"
     },
     "env": {
         "FLASK_ENV": {
