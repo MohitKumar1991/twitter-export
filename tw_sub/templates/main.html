@@ -20,7 +20,10 @@
             <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
         </div>
         <div class="nav-item">
-            <a class="nav-link" href="/emails">Emails <span class="sr-only">(current)</span></a>
+            <a class="nav-link" href="/email">Emails </a>
+        </div>
+        <div class="nav-item">
+            <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
         </div>
         <span class="navbar-text">
             A tool to DM your twitter followers
@@ -243,7 +246,8 @@
                             },
                             success: function(data){
                                 window.exporting = false;
-                                $('#exmsg').text('Exported to file '+ data.filename);
+                                var downloadLink = window.location.protocol + '//' + window.location.host + '/static/' + data.filename;
+                                $('#exmsg').html(`<p>Exported to file <br> <a href="${downloadLink}" target="_blank"> ${downloadLink} </a></p>`);
                                 $('#successModal').show();
                             },
                             error:function(error){

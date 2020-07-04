@@ -1,5 +1,6 @@
 from .models import scopedsession, State
 from typing import List
+import os
 
 def make_batches(lst,size):
     return [ lst[i:i+size] for i in range(0, len(lst), size) ]
@@ -21,7 +22,7 @@ def convert_to_csv(filename, data: List[dict]):
         return False
     import csv
     fieldnames = data[0].keys()
-    with open(filename, 'w', newline='') as csvfile:
+    with open(os.path.join(os.path.dirname(__file__), 'static',filename), 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for d in data:

@@ -23,15 +23,14 @@ def subemails():
 #get all emails submitted for a particular user
 @app.route("/emails", methods=["GET"])
 def getemails():
-    # root_created_by = load_state().get('username', None)
-    # if root_created_by is None:
-    #     return Response(json.dumps({'error': 'need subscriber' }), mimetype='application/json', status=400)
-    # all_links = get_all_links_created_by(root_created_by)
-    # #get all the emails for these links
-    # all_link_ids = ( l.id for l in all_links )
     emails = get_all_emails()
     return Response(json.dumps(emails), mimetype='application/json', status=200)
 
+#get all emails submitted for a particular user
+@app.route("/state", methods=["GET"])
+def currentstate():
+    state = load_state()
+    return Response(json.dumps(state), mimetype='application/json', status=200)
 
 @app.route("/export", methods=['GET'])
 def export():

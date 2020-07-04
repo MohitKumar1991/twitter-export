@@ -4,7 +4,7 @@ mac_setup:
 create_db:
 	poetry run python -m tw_sub.recreate_db
 
-run_server:
+start_server:
 	poetry run gunicorn tw_sub.main:app
 
 start_worker:
