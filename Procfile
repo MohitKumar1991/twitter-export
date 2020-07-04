@@ -1,1 +1,1 @@
-web: poetry run server
+web: gunicorn tw_sub.main:app

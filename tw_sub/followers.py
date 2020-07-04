@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import sqlite3, pandas as pd
 import time, json, tweepy
 from .utils import make_batches, load_state, store_state
 from .mytweepy import twpy 

@@ -9,7 +9,7 @@
     "repository": "https://github.com/MohitKumar1991/twitter-export",
     "success_url": "/",
     "scripts": {
-        "postdeploy": "make heroku_setup"
+        "postdeploy": "python -m  tw_sub.recreate_db"
     },
     "env": {
         "FLASK_ENV": {
@@ -25,8 +25,12 @@
             }
         }
     ],
-    "buildpacks": [{
+    "buildpacks": [
+        {
             "url":"https://github.com/moneymeets/python-poetry-buildpack.git"
+        },
+        {
+            "url": "heroku/python"
         }
     ]
 }
