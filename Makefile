@@ -11,4 +11,4 @@ run_server:
 	venv/bin/python manage.py runserver
 
 heroku_setup:
-	poetry run recreate_db
+	./db_setup.sh
