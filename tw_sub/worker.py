@@ -1,26 +1,42 @@
-import time, sys
-import signal
+import sys, time, os
 import threading
-from .followers import FollowersTask
-from .campaign import CampaignsTask
-def start_followers_task(stop_event):
-    ftasks = FollowersTask(stop_event=stop_event)
-    ftasks.run()
+from .daemon import Daemon
 
-def start_campaign_task(stop_event):
-    ctask = CampaignsTask(stop_event=stop_event)
-    ctask.run()
+class workerdaemon(Daemon):
+    def run(self):
+        self.stop_event = threading.Event()
+        from .followers import FollowersTask
+        from .campaign import CampaignsTask
+        
+        def start_followers_task(stop_event):
+            ftasks = FollowersTask(stop_event=self.stop_event)
+            ftasks.run()
 
-def sigterm(sig, frame): 
-    print("==== SIGTERM CALLED - SHUTTING DOWN ====", sig)
-    stop_event.set()
-    followers_thread.join()
-    campaign_thread.join()
-signal.signal(signal.SIGTERM, sigterm)
-followers_thread = None
-campaign_thread = None
-stop_event = threading.Event()
-followers_thread = threading.Thread(target=start_followers_task, args=(stop_event,))
-campaign_thread = threading.Thread(target=start_campaign_task, args=(stop_event,))
-followers_thread.start()
-campaign_thread.start()
+        def start_campaign_task(stop_event):
+            ctask = CampaignsTask(stop_event=self.stop_event)
+            ctask.run()
+
+        self.followers_thread = None
+        self.campaign_thread = None
+        
+        self.followers_thread = threading.Thread(target=start_followers_task, args=(self.stop_event,))
+        self.campaign_thread = threading.Thread(target=start_campaign_task, args=(self.stop_event,))
+        self.followers_thread.start()
+        self.campaign_thread.start()
+
+    def quit(self):
+        self.stop_event.set()
+        self.followers_thread.join()
+        self.campaign_thread.join()
+
+daemon = workerdaemon()
+
+if 'start' == sys.argv[1]: 
+    daemon.start()
+elif 'stop' == sys.argv[1]: 
+    daemon.stop()
+elif 'restart' == sys.argv[1]: 
+    daemon.restart()
+
+
+

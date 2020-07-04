@@ -9,7 +9,7 @@
     "repository": "https://github.com/MohitKumar1991/twitter-export",
     "success_url": "/",
     "scripts": {
-        "postdeploy": "python -m  tw_sub.recreate_db"
+        "postdeploy": "python -m tw_sub.recreate_db"
     },
     "env": {
         "ENV": {

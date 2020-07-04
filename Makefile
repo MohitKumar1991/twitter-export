@@ -1,14 +1,14 @@
 mac_setup:
 	./mac_setup
 
-setup: start_dev_db
-	pip3 install virtualenv
-	virtualenv venv
-	venv/bin/pip install -r requirements.txt -r requirements-dev.txt
-	venv/bin/python manage.py recreate_db
+create_db:
+	poetry run python -m tw_sub.recreate_db
 
 run_server:
-	venv/bin/python manage.py runserver
+	poetry run gunicorn tw_sub.main:app
 
-heroku_setup:
-	./db_setup.sh
+start_worker:
+	poetry run python -m tw_sub.worker start
+
+stop_worker:
+	poetry run python -m tw_sub.worker stop
