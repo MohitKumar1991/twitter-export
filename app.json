@@ -8,6 +8,9 @@
     ],
     "repository": "https://github.com/MohitKumar1991/twitter-export",
     "success_url": "/",
+    "scripts": {
+        "postdeploy": "poetry run recreate_db"
+    },
     "env": {
         "FLASK_ENV": {
             "description": "environment variable that determines the flask configuration - namely where to get postgres db url",
