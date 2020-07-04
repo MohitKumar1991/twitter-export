@@ -8,9 +8,6 @@
     ],
     "repository": "https://github.com/MohitKumar1991/twitter-export",
     "success_url": "/",
-    "scripts": {
-        "postdeploy": "make heroku_setup"
-    },
     "env": {
         "FLASK_ENV": {
             "description": "environment variable that determines the flask configuration - namely where to get postgres db url",
