@@ -1,4 +1,5 @@
 # twitter-export
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 ### Search through your followers and send them mass DMs. Uses Twitter APIs (which severly rate limit this)
 
