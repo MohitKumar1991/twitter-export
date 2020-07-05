@@ -64,8 +64,9 @@ class CampaignsTask:
 
         if self.curr_campaign is not None:  
             self.curr_followers = get_all_followers(self.curr_campaign['id'])
-        logging.debug(f"setting active campaign to {self.curr_campaign['name']} with {len(self.curr_followers)} followers")
-
+            logging.debug(f"setting active campaign to {self.curr_campaign['name']} with {len(self.curr_followers)} followers")
+        else:
+            logging.debug(f"no active campaign")
     # wait for IS_AUTH, AN ACTIVE CAMPAIGN, RATE_LIMIT AND INTERNET
     def _wait_till_available(self):
         logging.debug(f"_wait_till_available campaign:{self.curr_campaign} rate:{self.rate_limited}")

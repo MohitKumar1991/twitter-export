@@ -34,8 +34,6 @@ class ProductionConfig(Config):
     )
     DEBUG = False
 
-core_logger = logging.getLogger("core")
-
 if env == 'dev':
     config = DevelopmentConfig
 elif env == 'prod':
@@ -43,6 +41,6 @@ elif env == 'prod':
 else:
     raise Exception('Invalid Environment')
 
-print("CONFIG LOADED", config)
+logging.debug(f"CONFIG LOADED {env} {config} {config.SQLALCHEMY_DATABASE_URI} {config.DEBUG}")
 
 

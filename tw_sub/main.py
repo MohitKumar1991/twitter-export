@@ -1,38 +1,47 @@
-from flask import url_for, Flask
-from flask import request, redirect
-from flask import Response, render_template
-import signal, requests
-import sqlite3
-import json
+from flask import request, redirect, Response, render_template, url_for, Flask
+from flask_httpauth import HTTPBasicAuth
+import json, logging
 from datetime import datetime
-from collections import OrderedDict
+from .config import config
 from .mytweepy import twpy
 from .utils import store_state, load_state, convert_to_csv
 from .dbutils import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, delete_campaign, get_followers_with_query
 from .dbutils import get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
 
 app = Flask(__name__)
+flask_auth = HTTPBasicAuth()
+
+@flask_auth.verify_password
+def verify_password(username, password):
+    if config.DEBUG:
+        return 'devuser'
+    if username == config.HTTP_USERNAME and password == config.HTTP_PASSWORD:
+        return username
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 @app.route("/email", methods=['GET'])
+@flask_auth.login_required
 def subemails():
     state = load_state()
     return render_template('emails.html',username=state.get('username', ''))
 
 #get all emails submitted for a particular user
 @app.route("/emails", methods=["GET"])
+@flask_auth.login_required
 def getemails():
     emails = get_all_emails()
     return Response(json.dumps(emails), mimetype='application/json', status=200)
 
 #get all emails submitted for a particular user
 @app.route("/state", methods=["GET"])
+@flask_auth.login_required
 def currentstate():
     state = load_state()
     return Response(json.dumps(state), mimetype='application/json', status=200)
 
 @app.route("/export", methods=['GET'])
+@flask_auth.login_required
 def export():
     query = request.args.get('query', '')
     limit = request.args.get('limit', '')
@@ -50,6 +59,7 @@ def export():
 
 
 @app.route("/campaigns", methods=['GET', 'POST', 'DELETE'])
+@flask_auth.login_required
 def campaigns():
     if request.method == 'GET':
         campaign_id = request.args.get('campaign_id',None)
@@ -82,6 +92,7 @@ def campaigns():
         raise Exception('Wrong Method')
 
 @app.route("/campaign_followers", methods=['GET'])
+@flask_auth.login_required
 def campaign_followers():
     campaign_id = request.args.get('campaign_id',None)
     if campaign_id is not None:
@@ -89,6 +100,7 @@ def campaign_followers():
         return Response(json.dumps(campaign_followers), mimetype='application/json')
 
 @app.route('/followers', methods=['GET'])
+@flask_auth.login_required
 def followers():
     query = request.args.get('query', '')
     limit = request.args.get('limit', '')
@@ -108,6 +120,7 @@ def followers():
     
 
 @app.route('/status', methods=['GET'])
+@flask_auth.login_required
 def followers_status():
     worker_status = { 'runner_status': True, 'followers_status':  'stopped', 'campaigns_status': 'stopped' }
     curr_status = load_state()
@@ -115,22 +128,26 @@ def followers_status():
     return Response(json.dumps(curr_status), mimetype='application/json')
 
 @app.route("/search", methods=['GET'])
+@flask_auth.login_required
 def dashboard():
     username = load_state().get('username','')
     return render_template('main.html',username=username)
 
 @app.route("/updates", methods=['GET'])
+@flask_auth.login_required
 def updates():
     curr_status = load_state()
     fcount = get_followers_count_with_query('')
     return render_template('updates.html', **curr_status, fcount=fcount)
 
 @app.route("/auth", methods=['GET'])
+@flask_auth.login_required
 def auth():
     curr_state = load_state()
     return render_template('auth.html', **{ 'consumer_key':  curr_state.get('CONSUMER_KEY', None), 'consumer_secret': curr_state.get('CONSUMER_SECRET_KEY', None) })
 
 @app.route("/auth_pin", methods=['GET'])
+@flask_auth.login_required
 def auth_pin():
     pin = request.args.get('pin', None)
     if not pin:
@@ -146,6 +163,7 @@ def auth_pin():
 
 
 @app.route("/auth_link", methods=['GET'])
+@flask_auth.login_required
 def auth_link():
     consumer_key = request.args.get('consumer_key', None)
     consumer_secret = request.args.get('consumer_secret', None)
@@ -165,18 +183,21 @@ def auth_link():
 
 # function that is called when you visit /
 @app.route("/link", methods=["GET"])
+@flask_auth.login_required
 def index():
     # just show a nice page saying what this is
     return render_template('link.html')
 
 # create new af link - takes either the username of the person or another af link
 @app.route("/links", methods=["GET"])
+@flask_auth.login_required
 def alllinks():
     links = get_all_links()
     return Response(json.dumps(links), mimetype='application/json', status=200)
 
 # create new af link - takes either the username of the person or another af link
 @app.route("/link", methods=["POST"])
+@flask_auth.login_required
 def createlink():
     body = request.json
     
@@ -197,6 +218,7 @@ def createlink():
 
 # take email and the link for which the email was submitted
 @app.route("/email", methods=["POST"])
+@flask_auth.login_required
 def email():
     body = request.json
     if 'email' not in body or 'link_id' not in body or 'username' not in body:
@@ -216,6 +238,7 @@ def email():
 
 #render the page to submit one's email
 @app.route("/l/<linkurl>", methods=["GET"])
+@flask_auth.login_required
 def rendersubmit(linkurl):
     link = get_link(url=linkurl)
     username = load_state().get('username')
@@ -225,6 +248,7 @@ def rendersubmit(linkurl):
 
 
 @app.route("/", methods=['GET'])
+@flask_auth.login_required
 def rootpath():
     state = load_state()
     if state.get('is_auth','false') == 'true':
