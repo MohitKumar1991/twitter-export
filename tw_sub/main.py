@@ -3,7 +3,6 @@ from flask_httpauth import HTTPBasicAuth
 import json, logging
 from datetime import datetime
 from .config import config
-from .mytweepy import twpy
 from .utils import store_state, load_state, convert_to_csv
 from .dbutils import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, delete_campaign, get_followers_with_query
 from .dbutils import get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
@@ -150,6 +149,7 @@ def auth():
 @app.route("/auth_pin", methods=['GET'])
 @flask_auth.login_required
 def auth_pin():
+    from .mytweepy import twpy
     pin = request.args.get('pin', None)
     if not pin:
         return Response(json.dumps({'error': 'No Pin'}), mimetype='application/json', status=400)
@@ -166,6 +166,7 @@ def auth_pin():
 @app.route("/auth_link", methods=['GET'])
 @flask_auth.login_required
 def auth_link():
+    from .mytweepy import twpy
     consumer_key = request.args.get('consumer_key', None)
     consumer_secret = request.args.get('consumer_secret', None)
     if consumer_key is None or consumer_secret is None:
