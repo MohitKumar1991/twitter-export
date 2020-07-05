@@ -60,7 +60,7 @@ def get_all_campaigns():
     result = []
     for c in campaigns:
         d = c.to_dict()
-        d['followers_count'] = cf_index[str(d['id'])]
+        d['followers_count'] = cf_index[d['id']]
         result.append(d)
     return result
 
