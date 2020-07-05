@@ -45,7 +45,7 @@ class CampaignFollowers(Base, DictMixIn):
     __tablename__ = "campaign_followers"
 
     campaign_follower_id = Column(String, primary_key=True, index=True)
-    campaign_id = Column(String)
+    campaign_id = Column(Integer)
     follower_id = Column(String)
     status = Column(String)
     sent_time = Column(Date)
