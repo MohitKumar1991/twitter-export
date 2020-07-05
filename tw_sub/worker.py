@@ -1,5 +1,5 @@
 import sys, time, os
-import threading
+import threading, logging
 from .daemon import Daemon
 
 logging.basicConfig(level=logging.DEBUG, format='%(threadName)s%6d%(message)s')
