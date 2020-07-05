@@ -3,6 +3,13 @@
 
 ### Search through your followers and send them mass DMs. Uses Twitter APIs (which severly rate limit this)
 
+#### Features
+- Export all your followers (works on million+ followers - takes a couple of hours)
+- Filter followers using multiple parameters
+- Send DMs to a selected group of followers
+- Create subscription links where people can submit emails
+- Manage that email list as well as create affiliate links to reward people who help you get more emails
+
 #### HEROKU INSTRUCTIONS (After clicking on the Deploy to Heroku Button)
 - Set the password and username using `HTTP_USERNAME` and `HTTP_PASSWORD`. Default are `noob` and `nommr` respectively.
 - Go to App Overview in the (Heroku Dashboard)[https://dashboard.heroku.com]
