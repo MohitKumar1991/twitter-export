@@ -116,6 +116,7 @@ def followers():
         total = get_followers_count_with_query(query)
         return Response(json.dumps({'total':total, 'followers':followers}), mimetype='application/json')
     except Exception as e:
+        logging.exception(e)
         return Response(json.dumps({'error': str(e)}), mimetype='application/json', status=400)
     
 
@@ -157,7 +158,7 @@ def auth_pin():
     try:
         twpy.set_pin_and_init(pin)
     except TweepError as te:
-        print(te)
+        logging.exception(te)
         return Response(json.dumps({ 'error':str(te) }), mimetype='application/json', status=400)
     return Response(json.dumps({'success': 'true' }), mimetype='application/json')
 
@@ -197,7 +198,6 @@ def alllinks():
 
 # create new af link - takes either the username of the person or another af link
 @app.route("/link", methods=["POST"])
-@flask_auth.login_required
 def createlink():
     body = request.json
     
@@ -231,14 +231,12 @@ def email():
         'name': body.get('name','')
     })
     username =  body.get('username')
-    # submitted_email = Email.query.filter_by(parent_link_id=link.id, email=email).first()
     aflink = create_link(username, link_id)
     return Response(json.dumps({ 'email': submitted_email.to_dict(), 'aflink': aflink.to_dict() }), mimetype='application/json', status=200)
 
 
 #render the page to submit one's email
 @app.route("/l/<linkurl>", methods=["GET"])
-@flask_auth.login_required
 def rendersubmit(linkurl):
     link = get_link(url=linkurl)
     username = load_state().get('username')

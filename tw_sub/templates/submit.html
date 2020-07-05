@@ -21,7 +21,7 @@
     <div class="container">
         <h2 style="margin:20px;"></h2>
         <div id="submitemail-group">
-            <h3 for="submitemail-msg">Subscribe to {{orig_created_by}} here!</h3>
+            <h3 for="submitemail-msg">Subscribe to {{username}} here!</h3>
             <form id="submitemail" style="width:300px;margin-top:30px;">
                     <input type="hidden" class="form-control" id="link_id" placeholder="LinkId" value="{{link_id}}">
                     <div class="form-group">
@@ -31,7 +31,7 @@
                         <input type="text" class="form-control" id="name" placeholder="Name" value="">
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" id="username" placeholder="twitter username" value="{{username}}">
+                        <input type="text" class="form-control" id="username" placeholder="Your twitter username" value="">
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-info">Submit</button>
@@ -40,7 +40,7 @@
         </div>
         <div id="successmsg" style="display:none">
             <h2> Thank you for your subsciption!!</h2>
-            <p> You can use this affiliate link to get more subscribers on board. </p>
+            <p> You can use this affiliate link to get more subscribers on board and earn rewards !! </p>
             <p id="aflink"></p>
         </div>
     </div>

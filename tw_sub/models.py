@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.types import Date
-import datetime
+import datetime, time
 from .config import config
 from base64 import b64encode, b64decode
 
@@ -127,11 +127,8 @@ class Link(Base, DictMixIn):
 
     @staticmethod
     def url_from_username(cls, root_created_by, created_by=None):
-        if created_by:
-            unique_str = root_created_by + '__' + str(datetime.datetime.now()) +  '__' +  created_by
-        else:
-            unique_str = root_created_by + '__' + str(datetime.datetime.now())
-        return b64encode(unique_str.encode('utf-8')).decode('utf-8')
+        unique_str = str(time.time())
+        return b64encode(unique_str.encode('utf-8')).decode('utf-8').replace('=','')
 
 
     def __repr__(self):

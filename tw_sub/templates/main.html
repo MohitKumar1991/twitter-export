@@ -178,7 +178,7 @@
                         }),
                         success:function(data){
                             console.log('aflink data', data);
-                            window.myAFlink = '/l/'+data.url;
+                            window.myAFlink = window.location.protocol + '//' + window.location.host + '/l/'+data.url;
                             $('#aflink').text(window.myAFlink);
                             $('#cmesg').text("Hi there! Would you like to be part of my personal email list? You can subscribe here \n "+ window.myAFlink)
                         },
