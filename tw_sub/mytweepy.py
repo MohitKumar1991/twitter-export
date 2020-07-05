@@ -1,6 +1,6 @@
 from tweepy.error import TweepError
 from .utils import load_state, store_state
-import tweepy, json
+import tweepy, json, logging
 
 class MyTweepy:
     def __init__(self):
@@ -10,7 +10,7 @@ class MyTweepy:
     
     def try_init(self):
         state = load_state()
-        logging.debug(f'trying to init tweepy...ck{state.get('CONSUMER_KEY', None)} csk {state.get('CONSUMER_SECRET_KEY', None)} uk ${state.get('USER_KEY',None)} usk {state.get('USER_SECRET', None)}')
+        logging.debug(f"trying to init tweepy...ck{state.get('CONSUMER_KEY', None)} csk {state.get('CONSUMER_SECRET_KEY', None)} uk ${state.get('USER_KEY',None)} usk {state.get('USER_SECRET', None)}")
         if state.get('CONSUMER_KEY', None) is not None and state.get('CONSUMER_SECRET_KEY', None) is not None:
             self.oauth = tweepy.OAuthHandler(state.get('CONSUMER_KEY'), state.get('CONSUMER_SECRET_KEY'))
             if state.get('USER_KEY',None) is not None and state.get('USER_SECRET', None) is not None:
