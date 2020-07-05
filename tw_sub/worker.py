@@ -2,7 +2,7 @@ import sys, time, os
 import threading, logging
 from .daemon import Daemon
 
-logging.basicConfig(level=logging.DEBUG, format='%(threadName)s%6d%(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(threadName)s :: %(message)s')
 
 class workerdaemon(Daemon):
     def run(self):
