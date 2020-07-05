@@ -8,7 +8,7 @@ start_server:
 	poetry run gunicorn tw_sub.main:app
 
 start_worker:
-	poetry run python -m tw_sub.worker start
+	poetry run python -m tw_sub.worker start &
 
 stop_worker:
 	poetry run python -m tw_sub.worker stop

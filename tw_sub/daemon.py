@@ -24,44 +24,6 @@ class Daemon:
 		self.pidfile = pidfile
 	
 	def daemonize(self):
-		"""
-		do the UNIX double-fork magic, see Stevens' "Advanced 
-		Programming in the UNIX Environment" for details (ISBN 0201563177)
-		http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
-		"""
-		try: 
-			pid = os.fork() 
-			if pid > 0:
-				# exit first parent
-				sys.exit(0) 
-		except OSError as e: 
-			sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
-			sys.exit(1)
-	
-		# decouple from parent environment
-		os.setsid() 
-		os.umask(0) 
-	
-		# do second fork
-		try: 
-			pid = os.fork() 
-			if pid > 0:
-				# exit from second parent
-				sys.exit(0) 
-		except OSError as e: 
-			sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-			sys.exit(1) 
-	
-		# # redirect standard file descriptors
-		# sys.stdout.flush()
-		# sys.stderr.flush()
-		# si = open(os.devnull, 'r')
-		# so = open(os.devnull, 'a+')
-		# se = open(os.devnull, 'a+')
-		# os.dup2(si.fileno(), sys.stdin.fileno())
-		# os.dup2(so.fileno(), sys.stdout.fileno())
-		# os.dup2(se.fileno(), sys.stderr.fileno())
-	
 		atexit.register(self.onstop)
 		signal(SIGTERM, lambda signum, stack_frame: exit())
         
@@ -124,13 +86,6 @@ class Daemon:
 			else:
 				print(str(err))
 				sys.exit(1)
-
-	def restart(self):
-		"""
-		Restart the daemon
-		"""
-		self.stop()
-		self.start()
 
 	def run(self):
 		"""
