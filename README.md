@@ -16,10 +16,10 @@
 - Turn on the Worker in the heroku section (see images below)
 - Go to the app url and follow authentication instructions
 
-<img align="left" height="400" src="https://raw.githubusercontent.com/MohitKumar1991/twitter-export/f/salchemy/docs/heroku_app_overview.png"></img>
+<img align="left" height="400" src="https://raw.githubusercontent.com/MohitKumar1991/twitter-export/master/docs/heroku_app_overview.png"></img>
 <br/>
-![Heroku Dyno Configure](https://github.com/MohitKumar1991/twitter-export/blob/f/salchemy/docs/worker_dyno_off.png?raw=true)
-![Heroku Worker On](https://github.com/MohitKumar1991/twitter-export/blob/f/salchemy/docs/worker_start.png?raw=true)
+![Heroku Dyno Configure](https://github.com/MohitKumar1991/twitter-export/blob/master/docs/worker_dyno_off.png?raw=true)
+![Heroku Worker On](https://github.com/MohitKumar1991/twitter-export/blob/master/docs/worker_start.png?raw=true)
 
 
 #### LOCAL INSTALLATION
