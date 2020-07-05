@@ -17,6 +17,8 @@
 - Go to the app url and follow authentication instructions
 - After Auth - wait for some time as it downloads your followers
 - Some queries might be slow on heroku free tier
+
+<br/>
 <img align="left" height="400" src="https://raw.githubusercontent.com/MohitKumar1991/twitter-export/master/docs/heroku_app_overview.png"></img>
 <br/>
 ![Heroku Dyno Configure](https://github.com/MohitKumar1991/twitter-export/blob/master/docs/worker_dyno_off.png?raw=true)
