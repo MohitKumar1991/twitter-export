@@ -2,6 +2,8 @@ import sys, time, os
 import threading
 from .daemon import Daemon
 
+logging.basicConfig(level=logging.DEBUG, format='%(threadName)s%6d%(message)s')
+
 class workerdaemon(Daemon):
     def run(self):
         self.stop_event = threading.Event()
@@ -19,8 +21,8 @@ class workerdaemon(Daemon):
         self.followers_thread = None
         self.campaign_thread = None
         
-        self.followers_thread = threading.Thread(target=start_followers_task, args=(self.stop_event,))
-        self.campaign_thread = threading.Thread(target=start_campaign_task, args=(self.stop_event,))
+        self.followers_thread = threading.Thread(name="followers",target=start_followers_task, args=(self.stop_event,))
+        self.campaign_thread = threading.Thread(name="campaigns", target=start_campaign_task, args=(self.stop_event,))
         self.followers_thread.start()
         self.campaign_thread.start()
 
