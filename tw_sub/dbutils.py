@@ -2,6 +2,7 @@ from uuid import uuid4
 from collections import OrderedDict, defaultdict
 from .models import scopedsession, State, Followers, Campaign, CampaignFollowers, Link, Email
 from sqlalchemy import func, text
+import logging
 
 def get_followers_count_with_query(query=None):
     if query is not None:
@@ -30,7 +31,7 @@ def get_followers(follower_ids=None):
     else:
         follower_ids = tuple(follower_ids)
         followers = scopedsession.query(Followers).filter(Followers.id.in_(follower_ids)).all()
-        print('get_followers', follower_ids, followers)
+        logging.debug(f'get_followers total {len(follower_ids)} followers')
     return [ f.to_dict() for f in followers ]
 
 def get_all_followers(campaign_id):
@@ -161,7 +162,6 @@ def get_all_links_created_by(created_by):
     original_links = scopedsession.query(Link).filter_by(created_by=created_by).all()
     all_links = []
     parent_links = original_links
-    print(original_links)
     while parent_links is not None and len(parent_links) > 0:
         all_links = all_links + parent_links
         parent_links_ids = ( l.id for l in parent_links )
