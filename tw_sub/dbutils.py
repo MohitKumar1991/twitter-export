@@ -12,7 +12,11 @@ def get_followers_count_with_query(query=None):
 
 def get_followers_with_query(query):
     q = text('select * from all_followers ' + query)
-    followers = scopedsession.query(Followers).from_statement(q)
+    try:
+        followers = scopedsession.query(Followers).from_statement(q)
+        scopedsession.commit()
+    except:
+        scopedsession.rollback()
     return [ f.to_dict() for f in followers ]
 
 def get_one_follower(follower_id):
