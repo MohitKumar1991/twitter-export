@@ -1,5 +1,6 @@
 from flask import request, redirect, Response, render_template, url_for, Flask
 from flask_httpauth import HTTPBasicAuth
+from flask_cors import CORS
 import json, logging
 from datetime import datetime
 from .config import config
@@ -8,6 +9,7 @@ from .dbutils import get_campaign_follower_details, get_campaign_details, get_al
 from .dbutils import get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
 
 app = Flask(__name__)
+CORS(app)
 flask_auth = HTTPBasicAuth()
 
 @flask_auth.verify_password
@@ -219,7 +221,6 @@ def createlink():
 
 # take email and the link for which the email was submitted
 @app.route("/email", methods=["POST"])
-@flask_auth.login_required
 def email():
     body = request.json
     if 'email' not in body or 'link_id' not in body or 'username' not in body:
