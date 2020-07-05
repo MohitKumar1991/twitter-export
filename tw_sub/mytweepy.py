@@ -10,7 +10,7 @@ class MyTweepy:
     
     def try_init(self):
         state = load_state()
-        print('TRY_INIT', json.dumps(state))
+        logging.debug(f'trying to init tweepy...ck{state.get('CONSUMER_KEY', None)} csk {state.get('CONSUMER_SECRET_KEY', None)} uk ${state.get('USER_KEY',None)} usk {state.get('USER_SECRET', None)}')
         if state.get('CONSUMER_KEY', None) is not None and state.get('CONSUMER_SECRET_KEY', None) is not None:
             self.oauth = tweepy.OAuthHandler(state.get('CONSUMER_KEY'), state.get('CONSUMER_SECRET_KEY'))
             if state.get('USER_KEY',None) is not None and state.get('USER_SECRET', None) is not None:
@@ -21,27 +21,26 @@ class MyTweepy:
                 self.username = myuser.screen_name
                 store_state({ 'username': self.username, 'is_auth': 'true' })
             except TweepError as e:
-                print(e)
+                logging.exception(e)
                 if e.args[0][0]['code'] == 89:
                     store_state({ 'username': '', 'is_auth': 'false' })
-                else:
-                    raise e
         else:
             store_state({ 'username': '', 'is_auth': 'false' })
     
     def init_oauth(self, consumerkey, consumersecret):
         try:
             self.oauth = tweepy.OAuthHandler(consumerkey, consumersecret, callback='oob')
+            logging.debug(f'initing oauth to ${self.oauth}')
             return self.oauth.get_authorization_url()
         except TweepError as te:
-            print(te)
+            logging.exception(te)
             return None
     
     def set_pin_and_init(self, pin):
         try:
             user_key, user_secret = self.oauth.get_access_token(pin)
         except TweepError as te:
-            print(te)
+            logging.exception(te)
             raise te
         store_state({
                 'USER_KEY': user_key,
