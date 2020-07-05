@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from tweepy import RateLimitError, TweepError 
 from .errors import AuthFailureError
-import threading
+import threading, logging
 import time, json, tweepy
 from jinja2 import Template
 from .utils import make_batches, load_state
@@ -29,14 +29,16 @@ class CampaignsTask:
                 self.do_task()
                 self.rate_limited = False
             except RateLimitError as rle:
-                print("RateLimitError", rle)
+                logging.exception(rle)
                 self.rate_limited = True
             except AuthFailureError as afe:
+                logging.exception(afe)
                 twpy.clear_auth()
                 store_state({
                     'USER_KEY': '',
                     'USER_SECRET': ''
                 })
+                logging.debug('clearing auth info...')
             self._create_checkpoint()
 
     def _send_message(self, campaign_follower):
@@ -44,10 +46,10 @@ class CampaignsTask:
         t = Template(self.curr_campaign['message_template'])
         follower = get_one_follower(campaign_follower['follower_id'])
         if follower is None:
-            print('FOllowers with ID {} not found'.format(campaign_follower['follower_id']))
+            logging.error('FOllowers with ID {} not found'.format(campaign_follower['follower_id']))
             return
         msg = t.render(follower=follower)
-        print("SENDING MESSAGE", msg, follower['id'])
+        logging.debug(f"sending message to {follower['name']}")
         twpy.tweepyapi.send_direct_message(str(follower['id']), msg)
         
 
@@ -62,11 +64,11 @@ class CampaignsTask:
 
         if self.curr_campaign is not None:  
             self.curr_followers = get_all_followers(self.curr_campaign['id'])
-        print("_ensure_current_active_campaign", self.curr_campaign, self.curr_followers)
+        logging.debug(f"setting active campaign to {self.curr_campaign['name']} with {len(self.curr_followers)} followers")
 
     # wait for IS_AUTH, AN ACTIVE CAMPAIGN, RATE_LIMIT AND INTERNET
     def _wait_till_available(self):
-        print("campaigns", "_wait_till_available", self.curr_campaign, self.rate_limited)
+        logging.debug(f"_wait_till_available campaign:{self.curr_campaign} rate:{self.rate_limited}")
         while True:
             #keep trying for this
             if not twpy.is_auth:
@@ -92,17 +94,17 @@ class CampaignsTask:
     
     #send a message to a batch of followers, then their sent_time and status in the db
     def do_task(self):
-        print('do_task')
         internet = False
         while not internet:
             try:
                 followers_to_send = [ f for f in self.curr_followers if str(f['status']) == 'pending' ]
+                logging.debug(f"total followers remaining to send {len(followers_to_send)} ")
                 for follower in followers_to_send:
                     self._send_message(follower)
                     self._mark_as_done(self.curr_campaign['id'], follower['follower_id'])
                 internet = True
             except TweepError as e:
-                print(e)
+                logging.exception(e)
                 if e.args[0][0]['code'] == 89:
                     self._auth = False
                     raise AuthFailureError(e)

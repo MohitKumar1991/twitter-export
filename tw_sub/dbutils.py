@@ -50,22 +50,18 @@ def delete_campaign(campaign_id):
 def get_all_campaigns():
     campaigns = scopedsession.query(Campaign).order_by(Campaign.status).all()
     campaign_followers = scopedsession.query(CampaignFollowers.campaign_id, func.count(CampaignFollowers.campaign_follower_id)).group_by(CampaignFollowers.campaign_id).all()
-    print(campaign_followers)
     cf_index = defaultdict()
     for cf in campaign_followers:
         cf_index[cf[0]] = cf[1]
-    print(cf_index)
     result = []
     for c in campaigns:
         d = c.to_dict()
-        print(d)
         d['followers_count'] = cf_index[str(d['id'])]
         result.append(d)
     return result
 
 def get_current_campaign():
     campaign = scopedsession.query(Campaign).filter(Campaign.status =="active").first()
-    print('get_current_campaign', campaign)
     if campaign is not None:
         return campaign.to_dict()
     else:
