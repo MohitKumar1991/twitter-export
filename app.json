@@ -18,11 +18,11 @@
         },
         "BASIC_USERNAME": {
             "description": "username for your app for protected urls",
-            "value": "admin"
+            "value": "noob"
         }, 
         "BASIC_PASSWORD": {
             "description": "username for your app for protected urls",
-            "value": "password"
+            "value": "nommr"
         }
     },
     "addons": [

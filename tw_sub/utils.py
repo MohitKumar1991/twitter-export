@@ -14,8 +14,11 @@ def load_state() -> dict:
     return result
 
 def store_state(d:dict):
-    states = [ scopedsession.merge(State(key=k, value=d[k])) for k in d ]
-    scopedsession.commit()
+    try:
+        states = [ scopedsession.merge(State(key=k, value=str(d[k]))) for k in d ]
+        scopedsession.commit()
+    except:
+        scopedsession.rollback()
 
 def convert_to_csv(filename, data: List[dict]):
     if len(data) == 0:
