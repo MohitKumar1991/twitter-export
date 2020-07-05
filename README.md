@@ -11,12 +11,12 @@
 - Manage that email list as well as create affiliate links to reward people who help you get more emails
 
 #### HEROKU INSTRUCTIONS (After clicking on the Deploy to Heroku Button)
-- **Set the password and username using `HTTP_USERNAME` and `HTTP_PASSWORD`. Default are `noob` and `nommr` respectively.**
-- **Go to App Overview in the (Heroku Dashboard)[https://dashboard.heroku.com]**
-- **Turn on the Worker in the heroku section (see images below)**
-- **Go to the app url and follow authentication instructions**
+- Set the password and username using `HTTP_USERNAME` and `HTTP_PASSWORD`. Default are `noob` and `nommr` respectively.
+- Go to App Overview in the (Heroku Dashboard)[https://dashboard.heroku.com]
+- Turn on the Worker in the heroku section (see images below)
+- Go to the app url and follow authentication instructions
 
-<img align="left" height="300" src="https://raw.githubusercontent.com/MohitKumar1991/twitter-export/f/salchemy/docs/heroku_app_overview.png"></img>
+<img align="left" height="400" src="https://raw.githubusercontent.com/MohitKumar1991/twitter-export/f/salchemy/docs/heroku_app_overview.png"></img>
 <br/>
 ![Heroku Dyno Configure](https://github.com/MohitKumar1991/twitter-export/blob/f/salchemy/docs/worker_dyno_off.png?raw=true)
 ![Heroku Worker On](https://github.com/MohitKumar1991/twitter-export/blob/f/salchemy/docs/worker_start.png?raw=true)
