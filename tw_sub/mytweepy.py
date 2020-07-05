@@ -16,14 +16,14 @@ class MyTweepy:
             if state.get('USER_KEY',None) is not None and state.get('USER_SECRET', None) is not None:
                 self.oauth.set_access_token(state.get('USER_KEY'), state.get('USER_SECRET'))
                 self.tweepyapi = tweepy.API(self.oauth)
-            try:
-                myuser = self.tweepyapi.me()
-                self.username = myuser.screen_name
-                store_state({ 'username': self.username, 'is_auth': 'true' })
-            except TweepError as e:
-                logging.exception(e)
-                if e.args[0][0]['code'] == 89:
-                    store_state({ 'username': '', 'is_auth': 'false' })
+                try:
+                    myuser = self.tweepyapi.me()
+                    self.username = myuser.screen_name
+                    store_state({ 'username': self.username, 'is_auth': 'true' })
+                except TweepError as e:
+                    logging.exception(e)
+                    if e.args[0][0]['code'] == 89:
+                        store_state({ 'username': '', 'is_auth': 'false' })
         else:
             store_state({ 'username': '', 'is_auth': 'false' })
     
