@@ -10,27 +10,27 @@
                 <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header" style="padding:10px">
-                        <h5 id="cname" class="modal-title" style="display:inline-block;">Campaign Details</h5>
+                        <h5 class="modal-title" style="display:inline-block;">Campaign Details</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body" style="padding:10px 30px;">
                         <div class="form-group row" style="font-weight:500; font-size:1rem;margin:0px;padding:0px;">
-                            <div class="col-sm-4">
+                            <div class="col-sm-6">
                                 <input type="text" placeholder="Campaign Status" readonly class="form-control-plaintext text-capitalize" id="cname" value="">
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-3">
                                 <input type="text" placeholder="Campaign Status" readonly class="form-control-plaintext text-uppercase" id="cstatus" value="">
                             </div>
                             
-                            <div class="col-sm-4">
+                            <div class="col-sm-3">
                                 <input type="text" placeholder="Sent Status" readonly class="form-control-plaintext text-right" id="cstats" value="">
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer" style="font-size:1rem;padding:30px;">
-                        <input type="text" placeholder="Campaign Message Template" readonly class="form-control-plaintext" id="cmesg" value="">
+                        <p class="form-control-plaintext" id="cmesg" ></p>
                     </div>
                 </div>
                 </div>
@@ -63,6 +63,7 @@
                     });
                 window.dataTable =  $('#spreadsheet').DataTable({
                             "data": data,
+                            "dom": "<ip<t>>",
                             "searchable":false,
                             "columns": columnsMap
                         });
@@ -80,7 +81,7 @@
 
                 $("#cid").val(cc.id);
                 $("#cname").val(cc.name);
-                $("#cmesg").val(cc.message_template);
+                $("#cmesg").text(cc.message_template);
                 $("#cstatus").val(cc.status);
 
                 let sentCount = 0;
@@ -92,7 +93,7 @@
                     }
                 }
 
-                $("#cstats").val(`Sent ${sentCount} out of ${totalCount}`);
+                $("#cstats").val(`Sent ${sentCount} of ${totalCount}`);
                 $("#cdetails").modal('show');
             }
 
@@ -104,8 +105,8 @@
                     dataType: "json",
                     success:function(data){
                         if(data instanceof Array && data.length>0){
-                            $('#full-campaign').show();
-                            $('#empty-campaign').hide();
+                            $('.full-campaign').show();
+                            $('.empty-campaign').hide();
                             display_campaigns(data);
                             getCampaign(data[0].id);
                         }

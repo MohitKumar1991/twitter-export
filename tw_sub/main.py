@@ -147,7 +147,7 @@ def updates():
 @flask_auth.login_required
 def auth():
     curr_state = load_state()
-    return render_template('auth.html', **{ 'consumer_key':  curr_state.get('CONSUMER_KEY', None), 'consumer_secret': curr_state.get('CONSUMER_SECRET_KEY', None) })
+    return render_template('auth.html', **{ 'consumer_key':  curr_state.get('CONSUMER_KEY', ''), 'consumer_secret': curr_state.get('CONSUMER_SECRET_KEY', '') })
 
 @app.route("/auth_pin", methods=['GET'])
 @flask_auth.login_required

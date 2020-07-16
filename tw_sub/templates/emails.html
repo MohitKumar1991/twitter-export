@@ -5,7 +5,7 @@
     <div class="container">
         <div class="full-campaign" style="display: none;">
             <h3 style="margin-top:20px">EMAIL LIST</h3>
-            <h4 style="margin-top:5px;margin-bottom:20px;">All the folks who subscribed to your link or any of your affiliate links</p>
+            <h4 style="margin-top:5px;margin-bottom:30px;">All the folks who subscribed to your link or any of your affiliate links</h4>
             <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
         </div>
         <div class="empty-campaign text-center" style="padding-left:50px">
@@ -34,6 +34,7 @@
                                 if(dataTable === null) {
                                     dataTable = $('#spreadsheet').DataTable({
                                         "data": data,
+                                        "dom": "<ip<t>>",
                                         "columns": columnsMap
                                     });
                                 }
