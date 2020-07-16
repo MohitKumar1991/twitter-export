@@ -1,74 +1,154 @@
-<html>
-<head>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-</head>
-<body>
-    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
-        <a class="navbar-brand" href="#">Twitter Export</a>   
-        <div class="nav-item active">
-        <a class="nav-link" href="/">Home<span class="sr-only">(current)</span> </a>
-        </div>
-        <div class="nav-item">
-        <a class="nav-link" href="/updates">Dashboard </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/search">Followers </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/email">Emails</a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
-        </div>
-        <span class="navbar-text">
-            A tool to DM your twitter followers
-        </span>
-    </nav>
-    <div class="container">
-        <h2 style="margin:20px">SETUP & AUTH</h2>
-        <h3>This app uses API keys to download your twitter followers</h3>
+{% extends 'base.html' %}
 
-        <p>How to get Consumer Key and Secret:</p>
-        <p> 1. Create an App on Twitter with Read, Write and Direct Message Permission 
-            Use this app:- https://developer.twitter.com/en/apps
-        </p>
-        <p>2. Add the keys here</p>
-        <div class="row">
-            <div class="col-6">
-                <form id="consumerform">
-                    <div class="form-group">
-                    <label for="consumer-keys">Consumer Key</label>
-                    <input type="text" class="form-control" id="consumer-keys" placeholder="Consumer Keys" value="{{consumer_key}}">
-                    <label for="consumer-secret">Consumer Secret</label>
-                    <input type="text" class="form-control" id="consumer-secret" placeholder="Consumer Secret" value="{{consumer_secret}}">
-                    <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                    <div class="invalid-feedback">
-                        Something went wrong while getting your link.
-                    </div>
-                </form>
-                <form id="pinform" style='display:none;'>
-                    <a id="auth_url" target="_blank">
-                        <label class="form-check-label" id="auth_url_text">
-                            Go to this url: 
-                        </label>
+{% block title %}Log In{% endblock %}</h1>
+{% block header %} 
+    <script>
+    (function($) {
+                    $.fn.progressbar = function (options) {
+
+                        var opts = $.extend({ }, options);
+
+                        return this.each(function() {
+                            var $this = $(this);
+
+                            var $ul = $('<ul>').attr('class', 'progressbar');
+
+                            var currentIdx = -1
+
+                            $.each(opts.steps, function(index, value) {
+                                var $li = $('<li>').text(value.replace('@', '').replace('~', ''));
+                                $li.css('width', (100 / opts.steps.length) + '%');
+
+                                if(value.indexOf('@') > -1) {
+                                $li.addClass('current');
+                                currentIdx = index;
+                                }
+
+                                if(value.indexOf('~') > -1) {
+                                $li.addClass('fail');
+                                }
+
+                                $ul.append($li);
+                            });
+
+                            for(var i = 0; i < currentIdx; i++) {
+                                $($ul.find('li')[i]).addClass('done');
+                            }
+
+                            $this.append($ul);
+                        });
+                    };
+            })(jQuery);
+
+    </script>
+{%endblock%}
+{% block content %}
+    <div class="container">
+        <div id="steps" ></div>
+        <div id="welcome-setup" class="setup-level" >
+            <img class="center-image" src="/static/images/logo.svg" alt="logo" height="280px"/>
+            <h2>Welcome to Twitter Export</h2>
+            <h3>Open Source Twitter Tool to filter and DM your followers</h3>
+            <h3>Follow the simple steps to set it up</h3>
+            <button id="start-setup-btn" type="submit" class="btn btn-lg btn-success btn-block w-50" style="display:inline-block">Setup</button> 
+        </div>
+        <div id="app-setup" class="setup-level" style='display:none;'>
+            <h2>Create a Twitter App</h2>
+            <div class="row" style="margin-top:50px">
+                <ul class="list-group col-lg-6">
+                    <h4 style="margin-bottom:20px;margin-top:0px;">Instructions</h4>
+                    <li class="list-group-item"><h5>1. Go to the link below</h5>
+                        <a href="https://developer.twitter.com/en/apps" target="_blank"> <code> https://developer.twitter.com/en/apps</code></a></li>
+                    <li class="list-group-item"> <h5>2. Click on <code>Create an App </code></h5></li>
+                    <li class="list-group-item"> <h5>3. Add App Name and what the app will be used for</h5></li>
+                    <li class="list-group-item"><h5>4. Edit Permissions to Read, write and Direct Messages</h5></li>
+                </ul>
+                <div class="text-center col-lg-6">
+                    <h4 style="margin-top:0px;margin-bottom:20px;">Demo credentials already filled for you</h4>
+                    <form id="consumerform">
+                        <div class="form-group text-left">
+                            <h5 for="consumer-keys">Consumer Key</h5>
+                            <input type="text" class="form-control" id="consumer-keys" placeholder="Consumer Keys" value="{{consumer_key}}">
+                        </div>
+                        <div class="form-group text-left">
+                            <h5 style="margin-top:20px" for="consumer-secret">Consumer Secret</h5>
+                            <input type="text" class="form-control" id="consumer-secret" placeholder="Consumer Secret" value="{{consumer_secret}}">
+                        </div>
+                        <button type="submit" class="btn btn-lg btn-success btn-block w-50" style="display:inline-block">Submit</button>
+                        <div class="invalid-feedback">
+                            Invalid App Keys - Plz check again
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="pin-setup" class="setup-level text-center" style='display:none;'>
+            <h2>Authorize on Twitter</h2>
+            <div class="w-50" style="display: inline-block;">
+                <h3>Click on this link & get a PIN</h3>
+                <form id="pinform">
+                    <a id="auth_url" target="_blank" href="https://api.twitter.com/oauth/authorize?oauth_token=tNFduAAAAAABFIYjAAABc0mgM6o">
+                        <code class="form-check-label" id="auth_url_text">
+                            https://api.twitter.com/oauth/authorize?oauth_token=tNFduAAAAAABFIYjAAABc0mgM6o
+                        </code>
                     </a>
-                    <input type="text" class="form-control" id="pin" placeholder="Enter Pin Code Here" value="">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="form-group" style="margin-top:30px;">
+                        <input type="text" class="form-control" id="pin" placeholder="Enter PIN CODE Here" value="">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">Submit</button>
                     <div class="invalid-feedback">
                         The pin didn't work.
                     </div>
                 </form>
             </div>
         </div>
+        <div id="success-setup" class="setup-level text-center" style='display:none;'>
+            <h2>Success!</h2>
+            <h3>Redirecting you to dashboard...</h3>
+        </div>
     </div>
     <script>
         window.onload = function (){
             var auth_url = null;
+            function compose_default_keys() {
+               var consKey =  atob("VndQWXR" + "" + "IN2ZVVFpTR3B" + ""  + "oQzZvaW5IeWlWQQ"+ "==");
+               var consSecret = atob("SmluY1ZUY" + "" + "0tBVElEUUlFaDU1cXBF" + "" + "WFNxZlVTVDV" + "4bDl2ZE9rU" + "" + "ERPTGNGZFpUbGRFcUQ=");
+                return {'key':consKey,'secret': consSecret};
+            }
+             function showLevel(id){
+                $('.setup-level').fadeOut(300, function(){
+                    console.log(`id ${id} fadeOut completion called`);
+                    setTimeout(function() { 
+                        
+                        $('#' + id).fadeIn(200);
+
+                        if(id === 'app-setup') {
+                            $('#steps > ul > li').eq(0).removeClass('current'); 
+                            $('#steps > ul > li').eq(0).addClass('done'); 
+                            $('#steps > ul > li').eq(1).addClass('current'); 
+                        }else if (id === 'pin-setup') {
+                            $('#steps > ul > li').eq(1).removeClass('current'); 
+                            $('#steps > ul > li').eq(1).addClass('done'); 
+                            $('#steps > ul > li').eq(2).addClass('current');
+                        } else if (id == 'success-setup') {
+                            $('#steps > ul > li').eq(2).removeClass('current'); 
+                            $('#steps > ul > li').eq(2).addClass('done'); 
+                            $('#steps > ul > li').eq(3).addClass('current');
+                        }
+
+                    }, 300);
+                    
+                });   
+            }
+            if($('#consumer-keys').val() == '' || $('#consumer-secret').val() == '') {
+               var keys =  compose_default_keys();
+               $('#consumer-keys').val(keys.key);
+               $('#consumer-secret').val(keys.secret);
+            }
+            $('#start-setup-btn').click(function() {
+                showLevel('app-setup')
+            });
+
             $('#consumerform').submit(function ss(e){
                 e.preventDefault();
                 $.get({
@@ -79,9 +159,8 @@
                             $('#consumer-keys').removeClass('is-invalid');
                             $('#consumer-secret').removeClass('is-invalid');
                             $('#auth_url').attr('href', auth_url);
-                            $('#auth_url_text').text('Go to this url: ' + auth_url);
-                            $('#pinform').show();
-                            $('#consumerform').hide();
+                            $('#auth_url_text').text(auth_url);
+                            showLevel('pin-setup');
                         },
                         error: function(data) {
                             console.log(data);
@@ -98,8 +177,10 @@
                 $.get({
                     url:'/auth_pin?pin='+pin,
                     success: function(data){
-                            alert('SUCCESS - Redirecting to Dashboard');
-                            window.location = '/updates';
+                            showLevel('success-setup');
+                            setTimeout(function(){
+                                window.location = '/updates';
+                            }, 1000);
                         },
                     error: function(data) {
                             alert('ERROR - ' + JSON.stringify(data));
@@ -107,10 +188,13 @@
                         }
                 });
             });
+            $('#steps').progressbar({
+                steps: ['@Welcome', 'App Setup', 'Pin Setup', 'Finish',]
+            });
 
         }
     </script>
 </body>
-</html>
+{% endblock %}
 
 		

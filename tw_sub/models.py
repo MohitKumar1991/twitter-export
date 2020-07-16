@@ -58,6 +58,10 @@ class Followers(Base, DictMixIn):
     name = Column(String)
     screen_name = Column(String)
     location = Column(String)
+    #I havent thought about search properly so I will only limit occupations to 2
+    occupation1 = Column(String, nullable=True)
+    occupation2 = Column(String, nullable=True)
+    country = Column(String, nullable=True)
     description = Column(String)
     url = Column(String)
     entities = Column(String)

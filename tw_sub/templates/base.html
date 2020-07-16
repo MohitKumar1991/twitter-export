@@ -1,0 +1,103 @@
+<html>
+    <head>
+        <title>{% block title %}{% endblock %} - Twitter-Export</title>
+        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+        <script src="/static/js/paper.js"></script>
+        <script src="/static/js/tagify.js"></script>
+       
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.9.3/introjs.min.css">
+        <link rel="stylesheet" href="/static/css/paper-kit.css">
+        <link rel="stylesheet" href="/static/css/tagify.css">
+        <link rel="stylesheet" href="/static/css/app.css">
+        <link rel="stylesheet" href="/static/css/fas.css">
+        
+        <script>
+            var UTIL = {
+                    numberWithCommas: function(x) {
+                            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        },
+                    capitalize: function(text) { 
+                            if(text==null || text.length ==0) {
+                                return '';
+                            }
+                            return  text[0].toUpperCase() +  text.slice(1); 
+                        },
+                    copyToClipboard: function(str) {
+                        const el = document.createElement('textarea');
+                        el.value = str;
+                        el.setAttribute('readonly', '');
+                        el.style.position = 'absolute';
+                        el.style.left = '-9999px';
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                    },
+                    selectText: function(id) {
+                            var sel, range;
+                            var el = document.getElementById(id); //get element id
+                            if (window.getSelection && document.createRange) { //Browser compatibility
+                            sel = window.getSelection();
+                            if(sel.toString() == ''){ //no text selection
+                                window.setTimeout(function(){
+                                    range = document.createRange(); //range object
+                                    range.selectNodeContents(el); //sets Range
+                                    sel.removeAllRanges(); //remove all ranges from selection
+                                    sel.addRange(range);//add Range to a Selection.
+                                },1);
+                            }
+                            }else if (document.selection) { //older ie
+                                sel = document.selection.createRange();
+                                if(sel.text == ''){ //no text selection
+                                    range = document.body.createTextRange();//Creates TextRange object
+                                    range.moveToElementText(el);//sets Range
+                                    range.select(); //make selection.
+                                }
+                            }
+                    }
+                };
+        </script>
+        {% block header %}{% endblock %}
+    </head>
+    <body>
+        {% block nav %}
+        <nav id="mainnav" class="navbar navbar-expand-lg navbar-light" style="padding-left:30px;padding-right:30px">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mainnav" aria-controls="mainnav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="/">Twitter Export</a> 
+            <span class="navbar-text w-50 text-center d-sm-none d-md-block">
+                A tool to move your twitter followers to private list
+            </span>
+            <div class="collapse navbar-collapse navbar-expand-lg flex-grow-1 justify-content-end" id="navbarToggle">
+                <ul class="navbar-nav mt-lg-0">
+    
+                    <li class="nav-item active">
+                        <a class="nav-link menu-item" href="/">Home </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-item" href="/updates">Dashboard </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-item" href="/search">Followers <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-item" href="/email">Emails </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
+                    </li>
+                </ul>
+            </div> 
+            
+        </nav>
+        {% endblock %}
+        {% block content %}{% endblock %}
+    </body>
+</html>

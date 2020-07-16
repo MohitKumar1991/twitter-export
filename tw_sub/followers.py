@@ -5,6 +5,7 @@ from .mytweepy import twpy
 from .models import scopedsession, Followers
 from tweepy import RateLimitError, TweepError
 from .errors import AuthFailureError
+from .analysis import find_followers_occupation
 from collections import OrderedDict
 import json
 import threading
@@ -27,6 +28,9 @@ CURR_FIELDS = [ "id",  "id_str", "name",  "screen_name",  "location", "descripti
                                                 "favourites_count", 
                                                 "utc_offset", 
                                                 "time_zone", 
+                                                "occupation1",
+                                                "occupation2",
+                                                "country",
                                                 "geo_enabled", 
                                                 "verified", 
                                                 "statuses_count", 
@@ -65,7 +69,7 @@ class FollowersTask:
         self.checkpoint = {
             'next_cursor': next_cursor
         }
-        logging.debug(f'initing - the current state is {self.last_run} {next_cursor}')
+        logging.warn(f'initing - the current state is {self.last_run} {next_cursor}')
         self.twpy = twpy
         self.rate_limited = False
         self.curr_iterator = None
@@ -78,7 +82,7 @@ class FollowersTask:
                 self.rate_limited = False
             except RateLimitError as rle:
                 loggin.exception(rle)
-                logging.debug('got ratelimited waiting 15 mins')
+                logging.warn('got ratelimited waiting 5 mins')
                 self.rate_limited = True
             except AuthFailureError as afe:
                 twpy.clear_auth()
@@ -90,7 +94,8 @@ class FollowersTask:
                 logging.exception(si)
                 if self.index_status == 'UPDATING' or self.index_status == 'CREATING':
                     self.index_status = 'READY'
-                logging.debug(f'cursor has reached the end - setting index_status to {self.index_status}')
+                logging.warn(f'cursor has reached the end - setting index_status to {self.index_status}')
+                time.sleep(5)
             finally:
                 self.last_run = datetime.now()
                 self._create_checkpoint()
@@ -110,27 +115,33 @@ class FollowersTask:
         self.task_run.set()
     
     def _wait_till_available(self):
-        logging.debug(f'wait_till_available {self.index_status} twpy:{self.twpy.is_auth}')
+        logging.warn(f'wait_till_available last_run:{self.last_run} status:{self.index_status} twpy:{self.twpy.is_auth}')
         while True:
             state = load_state()
+            ##try to init state all the time
             self.index_status = state.get('index_status', 'CREATING')
-            if not self.twpy.is_auth:
-                self.twpy.try_init()
             if self.index_status == 'INIT':
                 self.index_status = 'CREATING'
             if not self.twpy.is_auth:
-                time.sleep(5)
+                logging.warn(f'twpy is not initialized yet, trying init')
                 self.twpy.try_init()
-            elif self.index_status == 'READY' or (self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=15)):
+                continue
+            if self.curr_iterator is None: ##because need to wait for auth
+                logging.warn(f'wait_till_available initing curr_iterator')
+                self.curr_iterator = tweepy.Cursor(self.twpy.tweepyapi.followers_ids, screen_name=self.twpy.username, cursor=self.checkpoint['next_cursor']).pages()
+
+            ##ok things are setup
+            logging.warn(f'wait_till_available timepassed since last run is {(datetime.now() - self.last_run)}')
+            if self.index_status == 'READY':
+                logging.warn(f'wait_till_available index ready - idle....')
+                time.sleep(5)
+            elif self.rate_limited and (datetime.now() - self.last_run) < timedelta(minutes=5):
                 time.sleep(5)
             else:
-                if self.curr_iterator is None: ##because need to wait for auth
-                    logging.debug(f'wait_till_available initing curr_iterator')
-                    self.curr_iterator = tweepy.Cursor(self.twpy.tweepyapi.followers_ids, screen_name=self.twpy.username, cursor=self.checkpoint['next_cursor']).pages()
                 return
 
     def _create_checkpoint(self):
-        logging.debug(f'creating_checkpoint {self.checkpoint["next_cursor"]} twpy:{self.last_run} {self.index_status}')
+        logging.warn(f'creating_checkpoint {self.checkpoint["next_cursor"]} twpy:{self.last_run} {self.index_status}')
         store_state({
             'next_cursor':  self.checkpoint['next_cursor'],
             'last_run': str(self.last_run),
@@ -138,9 +149,11 @@ class FollowersTask:
         })
     
     def _save_in_db(self, data):
-        logging.debug(f'_save_in_db {len(data)}')
+        logging.warn(f'_save_in_db {len(data)}')
+        occupations = find_followers_occupation(data)
         for d in data:
             d = d._json
+            occ = occupations[d['id']]
             k_to_remove = []
             for k in d:
                 if k not in CURR_FIELDS:
@@ -151,6 +164,10 @@ class FollowersTask:
             d['entities'] = json.dumps(d['entities'])
             if 'status' in d:
                 del d['status']
+            if len(occ) > 0:
+                d['occupation1'] = occ[0]
+                if len(occ) > 1:
+                    d['occupation2'] = occ[1]
             scopedsession.merge(Followers(**d))
         scopedsession.commit()
     
@@ -159,7 +176,7 @@ class FollowersTask:
         while not internet:
             try:
                 follow_ids = next(self.curr_iterator)
-                logging.debug(f'do_task got {len(follow_ids)} followers')
+                logging.warn(f'do_task got {len(follow_ids)} followers')
                 internet = True
             except TweepError as e:
                 logging.exception(e)
@@ -173,13 +190,15 @@ class FollowersTask:
                     internet = True
                 except TweepError as e:
                     logging.exception(e)
-                    if e.args[0][0]['code'] == 89:
+                    logging.warn(f'tweep error e.args is {json.dumps(e.args)}')
+                    if str(e.api_code) == '89':
                         twpy.clear_auth()
                         raise AuthFailureError(e)
                     time.sleep(10)
             user_results = user_results + user_ids
         self._save_in_db(user_results)
         self.checkpoint['next_cursor'] = self.curr_iterator.next_cursor
+        logging.warn(f'updating checkpoint to {self.checkpoint["next_cursor"]}')
         if int(self.checkpoint['next_cursor']) == 0:
             raise StopIteration('Next Cursor is 0 now')
             

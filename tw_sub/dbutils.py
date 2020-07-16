@@ -7,9 +7,8 @@ import logging
 def get_followers_count_with_query(query=None):
     if query is not None:
         return query
-    follower_count = scopedsession.query(Followers.id).count()
-    
-    return tuple(followers[0])[0]
+    followers_count = scopedsession.query(Followers.id).count()
+    return followers_count
 
 def get_followers_with_query(query):
     q = text('select * from all_followers ' + query)

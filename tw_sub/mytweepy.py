@@ -18,11 +18,11 @@ class MyTweepy:
                 self.tweepyapi = tweepy.API(self.oauth)
                 try:
                     myuser = self.tweepyapi.me()
-                    self.username = myuser.screen_name
+                    self.username = 'balajis'#myuser.screen_name
                     store_state({ 'username': self.username, 'is_auth': 'true' })
                 except TweepError as e:
                     logging.exception(e)
-                    if e.args[0][0]['code'] == 89:
+                    if str(e.api_code) == '89':
                         store_state({ 'username': '', 'is_auth': 'false' })
         else:
             store_state({ 'username': '', 'is_auth': 'false' })
