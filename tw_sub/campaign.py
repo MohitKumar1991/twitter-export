@@ -106,7 +106,7 @@ class CampaignsTask:
                 internet = True
             except TweepError as e:
                 logging.exception(e)
-                if e.args[0][0]['code'] == 89:
+                if str(e.api_code) == '89':
                     self._auth = False
                     raise AuthFailureError(e)
                 time.sleep(10)

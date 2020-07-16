@@ -1,41 +1,19 @@
-<html>
-<head>
-    <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-</head>
-<body>
-    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
-        <a class="navbar-brand" href="#">Twitter Export</a>   
-        <div class="nav-item active">
-        <a class="nav-link" href="/">Home </a>
-        </div>
-        <div class="nav-item">
-        <a class="nav-link" href="/updates">Dashboard </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/search">Followers </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/email">Emails <span class="sr-only">(current)</span></a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
-        </div>
-        <span class="navbar-text">
-            A tool to DM your twitter followers
-        </span>
-    </nav>
+{% extends 'base.html' %}
+
+{% block title %}Emails{% endblock %}</h1>
+{% block content %}
     <div class="container">
-        <h3 class="row" style="margin:20px">YOUR SUBSCRIBED EMAILS </h3>
-        <p>EMAILS AND LINKS FOR YOU</p>
-        <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+        <div class="full-campaign" style="display: none;">
+            <h3 style="margin-top:20px">EMAIL LIST</h3>
+            <h4 style="margin-top:5px;margin-bottom:20px;">All the folks who subscribed to your link or any of your affiliate links</p>
+            <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+        </div>
+        <div class="empty-campaign text-center" style="padding-left:50px">
+            <h4><strong>Oops!</strong></h4>
+            <h4>Looks like no one is subscribed at the moment</h4>
+            <a href="/search"> <button class="btn btn-success btn-lg" style="margin:30px"> Get Started </button> </a>
+        </div>
     </div>
-
-
     <script>
         window.onload = function onload() {
 
@@ -48,7 +26,7 @@
                         success: function(data){
                             console.log('data', data);
                             if (data.length > 0) {
-                            var columns = Object.keys(data[0])
+                                var columns = Object.keys(data[0])
                                 var columnsMap = columns.map(function(d){ return { 'data': d, 'title': d }; });
                                 data = Object.keys(data).map(function(dk) {
                                     return data[dk];
@@ -59,11 +37,12 @@
                                         "columns": columnsMap
                                     });
                                 }
+                                $('.empty-campaign').hide();
+                                $('.full-campaign').show();
                             }
                         },
                         error: function(err) {
                             console.log(err);
-                            alert('failed to get errors');
                         }
                     });
             }
@@ -74,5 +53,4 @@
         }
      </script>
 
-</body>
-</html>
+{% endblock %}

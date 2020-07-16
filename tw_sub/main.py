@@ -114,7 +114,7 @@ def followers():
         limit = 'LIMIT ' + str(int(limit)) #to make sure it is an int
     try:
         followers = get_followers_with_query(query + ' ' + limit)
-        total = get_followers_count_with_query(query)
+        total = get_followers_count_with_query(query) #TODO not working with query
         return Response(json.dumps({'total':total, 'followers':followers}), mimetype='application/json')
     except Exception as e:
         logging.exception(e)
@@ -124,7 +124,7 @@ def followers():
 @app.route('/status', methods=['GET'])
 @flask_auth.login_required
 def followers_status():
-    worker_status = { 'runner_status': True, 'followers_status':  'stopped', 'campaigns_status': 'stopped' }
+    worker_status = { 'runner_status': True, 'followers_status':  'stopped', 'campaigns_status': 'stopped', 'total_followers': get_followers_count_with_query() }
     curr_status = load_state()
     curr_status.update(worker_status)
     return Response(json.dumps(curr_status), mimetype='application/json')
@@ -133,16 +133,17 @@ def followers_status():
 @flask_auth.login_required
 def dashboard():
     username = load_state().get('username','')
-    return render_template('main.html',username=username)
+    fcount = get_followers_count_with_query()
+    return render_template('followers.html',username=username, fcount=fcount)
 
 @app.route("/updates", methods=['GET'])
 @flask_auth.login_required
 def updates():
     curr_status = load_state()
-    fcount = get_followers_count_with_query('')
+    fcount = get_followers_count_with_query()
     return render_template('updates.html', **curr_status, fcount=fcount)
 
-@app.route("/auth", methods=['GET'])
+@app.route("/setup", methods=['GET'])
 @flask_auth.login_required
 def auth():
     curr_state = load_state()
@@ -254,7 +255,7 @@ def rootpath():
     if state.get('is_auth','false') == 'true':
         return redirect('/updates')
     else:
-        return redirect('/auth')
+        return redirect('/setup')
 
 
 

@@ -1,78 +1,53 @@
-<html>
-    <head>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" ></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
-        <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-    </head>
-<body>
-    <nav class="navbar navbar-light bg-light" style="background-color: #bdf !important;">
-        <a class="navbar-brand" href="#">Twitter Export</a>   
-        <div class="nav-item active">
-        <a class="nav-link" href="/">Home </a>
-        </div>
-        <div class="nav-item">
-        <a class="nav-link" href="/updates">Dashboard </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/search">Followers <span class="sr-only">(current)</span></a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" href="/email">Emails </a>
-        </div>
-        <div class="nav-item">
-            <a class="nav-link" target="_blank" href="https://github.com/MohitKumar1991/twitter-export">Github</a>
-        </div>
-        <span class="navbar-text">
-            A tool to DM your twitter followers
-        </span>
-    </nav>
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}</h1>
+{% block content %}
     <div class="container">
-        <h2 style="margin:20px;"></h2>
-        <div class="row alert alert-success" role="alert">
-            <h4 class="col alert-heading col" id="indexstatus">Local Followers with {{fcount}} followers is {{index_status}}</h4>
-            <h4 class="col">Campaign status :: <span id="campaignsstatus"> </span></h4>
-            <a class="col" href="/search" target="_blank"> <button class="btn btn-info">SEE FOLLOWERS</button></a>
-        </div>
-        <div class="row">
-            <div class="card col-8" id="cdetails" style="width: 18rem;display:none">
-                <form>
-                    <div class="form-group row">
-                      <label for="email" class="col-sm-4 col-form-label bold">Campaign Name</label>
-                      <div class="col-sm-8">
-                        <input type="text" readonly class="form-control-plaintext" id="cname" value="">
-                      </div>
+        <h3 style="margin:10px"> FOLLOWERS DB is <a  href="/search" target="_blank"> <span id="indexstatus" class="badge">{{index_status}} </span></a> | Total <span id="followerscount">{{fcount}}</span> followers currently.</h3> 
+        <hr style="margin: 30px"/>
+        <div class="campaigns">
+            <div  id="cdetails" class="campaign-details modal">
+                <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="padding:10px">
+                        <h5 id="cname" class="modal-title" style="display:inline-block;">Campaign Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="form-group row">
-                        <label for="message" class="col-sm-4 col-form-label">Campaign Message</label>
-                        <div class="col-sm-8">
-                          <input type="text" readonly class="form-control-plaintext" id="cmesg" value="">
+                    <div class="modal-body" style="padding:10px 30px;">
+                        <div class="form-group row" style="font-weight:500; font-size:1rem;margin:0px;padding:0px;">
+                            <div class="col-sm-4">
+                                <input type="text" placeholder="Campaign Status" readonly class="form-control-plaintext text-capitalize" id="cname" value="">
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" placeholder="Campaign Status" readonly class="form-control-plaintext text-uppercase" id="cstatus" value="">
+                            </div>
+                            
+                            <div class="col-sm-4">
+                                <input type="text" placeholder="Sent Status" readonly class="form-control-plaintext text-right" id="cstats" value="">
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="message" class="col-sm-4 col-form-label">Campaign Message</label>
-                        <div class="col-sm-8">
-                          <input type="text" readonly class="form-control-plaintext" id="cstatus" value="">
-                        </div>
+                    <div class="modal-footer" style="font-size:1rem;padding:30px;">
+                        <input type="text" placeholder="Campaign Message Template" readonly class="form-control-plaintext" id="cmesg" value="">
                     </div>
-                    <div class="form-group row">
-                        <label for="message" class="col-sm-4 col-form-label">Total Messages Sent</label>
-                        <div class="col-sm-8">
-                          <input type="text" readonly class="form-control-plaintext" id="cstats" value="">
-                        </div>
-                    </div>
-                </form>
+                </div>
+                </div>
+            </div>
+            <div class="empty-campaign text-center" style="padding-left:50px">
+                <h4>Campaigns let you DM your followers</h4>
+                <h4>Just select followers and create message template</h4>
+                <a href="/search"> <button class="btn btn-success btn-lg" style="margin:30px"> Get Started </button> </a>
+            </div>
+            <div class="full-campaign" style="display: none;">
+                <h3 style="margin:20px;margin-left:0px;">CAMPAIGNS</h3>
+                <table id="spreadsheet">
+
+                </table>
             </div>
         </div>
-    </div>
-    
-    <div class="container">
-        <h4 style="margin:20px;margin-left:0px;">YOUR CAMPAIGNS</h2>
-        <table id="spreadsheet">
-
-        </table>
+        
     </div>
     <script>
         window.onload = function onload() {
@@ -118,7 +93,7 @@
                 }
 
                 $("#cstats").val(`Sent ${sentCount} out of ${totalCount}`);
-                $("#cdetails").show();
+                $("#cdetails").modal('show');
             }
 
             function getCampaigns(){
@@ -128,13 +103,15 @@
                     url: '/campaigns',
                     dataType: "json",
                     success:function(data){
-                        display_campaigns(data);
                         if(data instanceof Array && data.length>0){
-                            getCampaign(data[0].id)
+                            $('#full-campaign').show();
+                            $('#empty-campaign').hide();
+                            display_campaigns(data);
+                            getCampaign(data[0].id);
                         }
                     },
                     error:function(err) {
-                        alert(err);
+                        console.log(err);
                     }
                 });
 
@@ -145,17 +122,21 @@
                     url:'/status',
                     success: function(data) {
                         console.log(data);
-                        $('#campaignsstatus').text(data.campaigns_status);
-                        $('#indexstatus').text('Followers Index - ' + data.index_status);
+                        $('#indexstatus').text(data.index_status);
+                        $('#followerscount').text(UTIL.numberWithCommas(data.total_followers));
+                        if(data.index_status.toLowerCase() == 'ready') {
+                            $('#indexstatus').addClass('badge-success');
+                        } else {
+                            $('#indexstatus').addClass('badge-warning');
+                        }
                     },
                     error: function(err) {
                         console.log(err);
-                        alert(err);
                     }
                 })
             }
  
-            setInterval(getUpdates, 5000);
+            setInterval(getUpdates, 25000);
             
             getCampaigns();
             getUpdates();
@@ -193,5 +174,4 @@
             }
         }
      </script>
-</body>
-</html>
+{% endblock %}

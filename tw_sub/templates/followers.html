@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+
+{% block title %}Followers {% endblock %}</h1>
+{% block content %}
+   
+    <div class="container">
+        <div class="row" style="padding:20px 0px;">
+            <h3 class="col-9" style="margin:0px">Total <span id="followerscount">{{fcount}}</span> followers currently.</h3> 
+            <div class="col-3">
+                <button id="exAllButton" class="btn btn-info" >Export All Followers (CSV)</button>
+            </div>
+        </div>
+    <h5 style="margin-bottom: 25px;"> You can filter on any of the columns in the table. Max followers will be loaded. Click the <strong>?</strong> button for examples. </h5>
+    <form id="searchInput">
+        <div class="row">
+
+            <div class="col-4">
+                <input type="text" class="form-control" id="query" placeholder="Start Searching" value=""/>
+            </div>
+            <div class="col-4">
+                <label class="text-left">
+                    Max
+                </label>
+                <input type="number" class="form-control" id="limit" placeholder="2000"  min="0" max="5000" value="" style="width:20%;display:inline-block" >
+                <button type="submit" class="btn btn-info" style="height:100%"><span class="fas fa-search"></span></button>
+                <button class="btn btn-warning" style="height:100%" data-toggle="modal" data-target="#infoModal"><span class="fas fa-question"></span></button>
+                
+            </div>
+            <div class="col-2">
+                <button id="ccButton" class="btn btn-danger" data-toggle="modal" data-target="#campaignModal">Send DM to them  <span class="fas fa-envelope-open-text"></span></button>
+            </div>
+            <div class="col-2">
+                <button id="exButton" class="btn btn-info"> Export As Csv <span class="fas fa-download"></span></button>
+            </div>
+        </div>
+    </form>
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="infoModalLabel" style="display:inline-block">Search Examples</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+                <h5>
+                    You can use the following operators
+                </h5>
+                <ul class="list-group">
+                  <li class="list-group-item">=,&gt;,&lt; :  These can be used for quality and comparison</li>
+                  <li class="list-group-item">IN  :  This can be used for one of the above</li>
+                  <li class="list-group-item">LIKE  :  This can be used for matching part of text</li>
+                </ul>
+                <hr>
+                 <ul class="list-group">
+                    <li class="list-group-item"><code>follower_count > 1000</code></li>
+                    <li class="list-group-item"><code>location LIKE %chicago%</code></li>
+                    <li class="list-group-item"><code>verified=1</code></li>
+                    <li class="list-group-item"><code>occupation = investor</code></li>
+                    <li class="list-group-item"><code>occupation in investor,founder</code></li>
+                  </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+    <div class="modal fade" id="campaignModal" tabindex="-1" role="dialog" aria-labelledby="campaignModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel" style="display:inline-block;">Create Campaign</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form id="cModal">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="cname" style="margin:0px;font-weight:500;">Campaign Name</label>
+                        <input type="text" class="form-control" id="cname" placeholder="Campaign Name" value="Send DM To Followers">
+                    </div>
+                    <div class="form-group">
+                        <label for="cmesg" style="margin:0px;font-weight:500;">Direct Message Text</label>
+                        <textarea class="form-control" id="cmesg" placeholder="Campaign Message" rows="5" style="padding:10px 10px;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <h5 class="mr-sm-2">Subscription link - Share with your followers<span class="fas fas-clipboard"></span></h5>
+                        <code><h5 id="aflink" style="cursor:pointer;font-size: 0.9rem;border: 1px solid #ddd;padding: 10px;"></h5></code>
+                    </div>
+                </div>
+                
+                <div class="modal-footer" style="padding:20px;">
+                    <button type="submit" class="btn btn-primary btn-block w-50">Create</button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+    </div>
+    
+      <div class="modal" id="successModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Success!</h5>
+              <button type="button" id="smclose" class="close" data-dismiss="modal" data-target="#successModal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p id="exmsg"></p>
+            </div>
+          </div>
+        </div>
+     </div>
+      <table id="spreadsheet" class="display" style="width: 100% !important; display: block; overflow: scroll;"></table>
+    </div>
+
+
+    <script>
+        window.onload = function onload() {
+            $('#followerscount').text(UTIL.numberWithCommas($('#followerscount').text()))
+            var WHITELIST_COLUMNS = [
+                    { 'data': 'id', 'title': 'id' },
+                    { 'data': 'name', 'title': 'name' },
+                    { 'data': 'screen_name', 'title': 'screen_name' },
+                    { 'data': 'location', 'title': 'location' },
+                    { 'data': 'description', 'title': 'description' },
+                    { 'data': 'url', 'title': 'website' },
+                    { 'data': 'occupation', 'title': 'occupation' },
+                    { 'data': 'followers_count', 'title': 'followers_count' },
+                    { 'data': 'friends_count', 'title': 'following_count' },
+                    { 'data': 'listed_count', 'title': 'listed_count' },
+                    { 'data': 'created_at', 'title': 'created_at' },
+                    { 'data': 'verified', 'title': 'verified' },
+                    { 'data': 'statuses_count', 'title': 'total_tweets' },
+                    { 'data': 'profile_image_url_https', 'title': 'profile image' }
+                ];
+            var COLUMN_INDEX = WHITELIST_COLUMNS.reduce(function(result, col){ result[col['title']] = col['data']; return result; }, {});
+            var COLUMN_NAMES = WHITELIST_COLUMNS.map(function(c) { return c.title; });
+            window.currentFollowers = [];
+            var dataTable = null;
+            window.exporting = false;
+            window.myAFlink = '';
+
+            $('#aflink').click(function() {
+                UTIL.selectText('aflink');
+            });
+
+            $('#ccButton').click(function() {
+                $('#campaignModal').modal('show');
+            });
+
+            $('#exButton').click(function(){
+                var inputs = tagify.value.map(function(t) { return parseInput(t.value); });
+                var query = composeQuery(inputs);
+                var limit = $('#limit').val();
+                exportFollowers(query, limit);
+            });
+            $('#exAllButton').click(function(){
+                var query = $('#query').val();
+                var limit = $('#limit').val();
+                exportFollowers('', '');
+            });
+
+            $("#smclose").click(function(){
+                $('#successModal').hide();
+            });
+
+            $('#searchInput').submit(function(e) {
+                e.preventDefault();
+
+                var inputs = tagify.value.map(function(t) { return parseInput(t.value); });
+                var query = composeQuery(inputs);
+                var limit = $('#limit').val();
+                getFollowers(query, limit);
+            });
+
+                
+            $('#cModal').submit(function(e) {
+                e.preventDefault();
+                var cname = $('#cname').val();
+                var cmesg = $('#cmesg').val();
+                var follower_ids = window.currentFollowers.map(function(cf){
+                    return cf.id_str;
+                });
+                $.ajax({
+                        type: "POST",
+                        url: '/campaigns',
+                        contentType: 'application/json',
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                                'message_template': cmesg, 
+                                'name': cname, 
+                                'followers': follower_ids
+                            }),
+                        success:function(data){
+                            alert('Campaign Created!!');
+                            window.open('/updates', '_blank');
+                        },
+                        error:function(err) {
+                            alert(`There was an error in creating ${err}`);
+                        }
+                    });
+            });
+
+            function getAfLink(){
+                $.ajax({
+                        type: "POST",
+                        url: '/link',
+                        contentType: 'application/json',
+                        dataType: "json",
+                        data: JSON.stringify({ 
+                                'created_by': "{{username}}"
+                        }),
+                        success:function(data){
+                            console.log('aflink data', data);
+                            window.myAFlink = window.location.protocol + '//' + window.location.host + '/l/'+data.url;
+                            $('#aflink').text(window.myAFlink);
+                            $('#cmesg').text("Hi there! Would you like to be part of my personal email list? You can subscribe here \n "+ window.myAFlink)
+                        },
+                        error:function(err) {
+                            alert(`Could not get your affiliate link`);
+                        }
+                    });
+            }
+
+            function getFollowers(query, limit) {
+
+                    $.get({
+                        url:'/followers', 
+                        data: {
+                            query:  query,
+                            limit: limit
+                        },
+                        success: function(data){
+                            $('totalFollowers').text(data.total);
+                            data = data.followers;
+                            if(data.length == 0){
+                                window.currentFollowers = data;
+                                if(dataTable !== null) { dataTable.clear(); dataTable.draw(); }
+                                return;
+                            }
+                            if(typeof data !== 'undefined'){
+                                window.currentFollowers = data;
+                            }
+                            
+                            var columnsMap = WHITELIST_COLUMNS;
+                            var columns = COLUMN_NAMES;
+                            data = Object.keys(data).map(function(dk) {
+
+                                //adding custom columns
+                                var ele = data[dk];
+                                ele['occupation'] = ele['occupation2'] !== null ? UTIL.capitalize(ele['occupation1']) + ' & ' + UTIL.capitalize(ele['occupation2']) : 
+                                                    UTIL.capitalize(ele['occupation1']) !== null ? UTIL.capitalize(ele['occupation1']) : ''; 
+                                return data[dk];
+                            });
+                            if(dataTable === null) {
+                                dataTable = $('#spreadsheet').DataTable({
+                                    "data": data,
+                                    "dom": "<ip<t>>",
+                                    "columns": columnsMap,
+                                    "columnDefs" :[{
+                                            "targets" : columns.indexOf('profile image'),
+                                            "render" : function ( url, type, full) {
+                                                return `<a target="blank" href="${url}"><img height="75%" width="75%" src="${url}"/>`;
+                                            }
+                                    }]
+
+                                });
+
+                            } else {
+                                dataTable.clear();
+                                dataTable.rows.add(data).draw();
+                            }
+
+                        }
+                    });
+            }
+
+            function exportFollowers(query, limit) {
+                if(!window.exporting){
+                    $.get({
+                        url:'/export', 
+                            data: {
+                                query:  query,
+                                limit: limit
+                            },
+                            success: function(data){
+                                window.exporting = false;
+                                var downloadLink = window.location.protocol + '//' + window.location.host + '/static/' + data.filename;
+                                $('#exmsg').html(`<p>Exported to file <br> <a href="${downloadLink}" target="_blank"> ${downloadLink} </a></p>`);
+                                $('#successModal').show();
+                            },
+                            error:function(error){
+                                alert('Export Failed');
+                                window.exporting = false;
+                                console.log(error);
+                            }
+                        });
+                    }
+                }
+
+
+            getFollowers('','');
+
+            getAfLink();
+
+                /**
+                    separator LIKE, IN , >, < , =
+                */
+            function parseInput(value) {
+                if(value === '' || value === null){ return []; }
+                value = value.toLowerCase() + ' ';
+                separators = [' like ', ' in ', '>', '<', '=', '>=', '<='];
+                var found_sep = null;
+                var splitIndex = -1;
+                for(let i=0;i<separators.length;i++){
+                    let sep = separators[i];
+                    if(value.indexOf(`${sep}`) >= 0)
+                    {
+                        found_sep = sep;
+                        splitIndex = value.indexOf(`${sep}`);
+                    }
+                }
+                if(splitIndex == -1) {
+                    value = value.trim();
+                    return COLUMN_NAMES.indexOf(value)>-1 ? [value]: [];                    
+                } else if(splitIndex + found_sep.length + 2 == value.length) {
+                    let col = value.slice(0, splitIndex).trim();
+                    return COLUMN_NAMES.indexOf(col) > -1 ? [col, found_sep.trim()]: [];
+                } else {
+                    let col = value.slice(0, splitIndex).trim();
+                    return COLUMN_NAMES.indexOf(col) > -1 ? [col, found_sep.trim(), value.slice(splitIndex + found_sep.length).trim()]: [];
+                }
+            }
+
+            function composeQuery(tags) {
+                var final_query = [];
+
+                function sanitizeValue(operator, val){
+                    if(operator == '>' || operator == '<') {
+                        //can be integer mostly
+                        val = parseInt(val);
+                    } else if (operator == 'like'){
+                        //can be string or integer
+                        val = val.replace(/^[\'\"]+|[\'\"]+$/g, '');
+                        val = `'${val}'`
+                    } else if(operator == 'in') {
+                        //TODO
+                        let vals = val.split(',');
+                        vals = vals.map(function(v) {
+                            if(isNaN(parseInt(val))){
+                                v = v.replace(/^[\'\"]+|[\'\"]+$/g, '');
+                                v = `'${v}'`;
+                            }
+                            return v;
+                        });
+                        val = `(${vals.join(',')})`;
+                    } else if (operator == '=') {
+                        //value is a string
+                        if(isNaN(parseInt(val))){
+                            val = val.replace(/^[\'\"]+|[\'\"]+$/g, '');
+                            val = `'${val}'`;
+                        }
+                    } else {
+                        console.log('unknown operator');
+                    }
+                    return val;
+                }
+
+                for(let i=0;i<tags.length;i++){
+                    var [column, operator, value] = tags[i];
+                    if(column == 'occupation') {
+                        query = `( occupation1 ${operator} ${sanitizeValue(operator, value)} OR occupation2 ${operator} ${sanitizeValue(operator, value)} )`
+                    } else {
+                        let dbColumn = COLUMN_INDEX[column];
+                        console.log('mapping column',column, COLUMN_INDEX[column]);
+                        query = `${dbColumn} ${operator} ${sanitizeValue(operator, value)} `
+                    }
+
+                    final_query.push(query);
+                }
+                
+                final_query =  final_query.join(' AND ');
+                console.log(final_query);
+                return final_query;
+            }
+
+            var input = document.getElementById('query'),
+                tagify = new Tagify(input, {
+                    whitelist : COLUMN_NAMES,
+                    keepInvalidTags  : false,
+                    transformTag: function(tagData){
+                        // example of basic custom validation
+                        if( parseInput(tagData.value).length !==3){
+                            tagData.value = ''; // an empty value will force the tag to be "invalid"
+                        }
+                    },
+                    dropdown : {
+                        classname     : "color-blue",
+                        enabled       : 0,              // show the dropdown immediately on focus
+                        maxItems      : 5,
+                        position      : "text",         // place the dropdown near the typed text
+                        closeOnSelect : false,          // keep the dropdown open after selecting a suggestion
+                        highlightFirst: true
+                    }
+                });
+
+                tagify.on('input', function onInput(e){
+                        var separators = [' like ', ' in ', '>', '<', '=', '>=', '<='];
+                        var parsed = parseInput(e.detail.value);
+                        if(parsed.length == 0) {
+                            tagify.settings.whitelist = COLUMN_NAMES;
+                        } else if(parsed.length == 1) {
+                            tagify.settings.whitelist = separators.map(function(s){ return `${parsed[0]} ${s}`; });
+                        }
+                    });
+             
+            window.tagify = tagify;
+            
+            
+
+           
+
+        }
+     </script>
+{% endblock %}
