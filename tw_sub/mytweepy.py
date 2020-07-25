@@ -23,7 +23,7 @@ class MyTweepy:
                         log_event(f'getting stuff for {config.TWITTER_USERNAME}')
                         myuser = self.tweepyapi.get_user(screen_name=config.TWITTER_USERNAME)
                         self.username =  myuser.screen_name
-                    if self.username is None or len(config.TWITTER_USERNAME) > 0:
+                    if self.username is None or len(config.TWITTER_USERNAME) == 0:
                         myuser = self.tweepyapi.me()
                         self.username =  myuser.screen_name 
                     store_state({ 'username': self.username, 'is_auth': 'true' })
