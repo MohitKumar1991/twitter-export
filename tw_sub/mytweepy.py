@@ -2,6 +2,7 @@ from tweepy.error import TweepError
 from .utils import load_state, store_state
 import tweepy, json, logging
 from .config import config
+from .dbutils import log_event
 
 class MyTweepy:
     def __init__(self):
@@ -19,6 +20,7 @@ class MyTweepy:
                 self.tweepyapi = tweepy.API(self.oauth)
                 try:
                     if len(config.TWITTER_USERNAME) > 0:
+                        log_event(f'getting stuff for {config.TWITTER_USERNAME}')
                         myuser = self.tweepyapi.get_user(screen_name=config.TWITTER_USERNAME)
                         self.username =  myuser.screen_name
                     if self.username is None or len(config.TWITTER_USERNAME) > 0:
