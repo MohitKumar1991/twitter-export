@@ -1,8 +1,18 @@
 from uuid import uuid4
 from collections import OrderedDict, defaultdict
-from .models import scopedsession, State, Followers, Campaign, CampaignFollowers, Link, Email
+from .models import scopedsession,LogEvent, State, Followers, Campaign, CampaignFollowers, Link, Email
 from sqlalchemy import func, text
 import logging
+
+def log_event(msg=''):
+    logging.warn(msg) #just logging here also so i dont have to log two times
+    le = LogEvent(msg=msg)
+    scopedsession.add(le)
+    scopedsession.commit()
+
+def get_log_events(count=100):
+    events = scopedsession.query(LogEvent).order_by(LogEvent.created_at.desc()).limit(count).all()
+    return [ e.to_dict() for e in events ]
 
 def get_followers_count_with_query(query=None):
     if query is not None:

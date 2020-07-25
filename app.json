@@ -23,6 +23,10 @@
         "BASIC_PASSWORD": {
             "description": "username for your app for protected urls",
             "value": "nommr"
+        },
+        "TWITTER_USERNAME": {
+            "description": "blank for yourself else whoever's followers you want to see",
+            "value": ""
         }
     },
     "addons": [

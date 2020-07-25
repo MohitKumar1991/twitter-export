@@ -18,6 +18,7 @@ class Config:
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///./common.db'
     SQLALCHEMY_CONNECT_ARGS = {"check_same_thread": False }
+    TWITTER_USERNAME = ''
     DEBUG = True
 
 
@@ -31,6 +32,9 @@ class ProductionConfig(Config):
     )
     HTTP_PASSWORD = os.environ.get(
         "BASIC_PASSWORD", "nommr"
+    )
+    TWITTER_USERNAME = os.environ.get(
+        "TWITTER_USERNAME", ""
     )
     DEBUG = False
 

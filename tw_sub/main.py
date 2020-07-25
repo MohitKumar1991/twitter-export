@@ -6,7 +6,7 @@ from datetime import datetime
 from .config import config
 from .utils import store_state, load_state, convert_to_csv
 from .dbutils import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, delete_campaign, get_followers_with_query
-from .dbutils import get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
+from .dbutils import get_log_events, get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
 
 app = Flask(__name__)
 CORS(app)
@@ -20,6 +20,12 @@ def verify_password(username, password):
         return username
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+@app.route("/log_events", methods=['GET'])
+@flask_auth.login_required
+def log_events():
+    les = get_log_events()
+    return Response(json.dumps(les), mimetype='application/json', status=200)
 
 @app.route("/email", methods=['GET'])
 @flask_auth.login_required

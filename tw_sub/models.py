@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.types import Date
+from sqlalchemy.sql import func
 import datetime, time
 from .config import config
 from base64 import b64encode, b64decode
@@ -31,6 +32,12 @@ class State(Base, DictMixIn):
 
     key = Column(String, primary_key=True, index=True)
     value = Column(String)
+
+class LogEvent(Base, DictMixIn):
+    __tablename__ = "log_events"
+    id = Column(Integer, primary_key=True, index=True)
+    msg = Column(String)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
 class Campaign(Base, DictMixIn):
     __tablename__ = "campaigns"
@@ -99,6 +106,9 @@ class Followers(Base, DictMixIn):
     follow_request_sent = Column(String)
     notifications = Column(String)
     translator_type = Column(String)
+    change_diff = Column(String, default="{}")
+    row_created_at = Column(DateTime(timezone=True), default=datetime.datetime.now)
+    row_updated_at = Column(DateTime(timezone=True), onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
 
 # Note that we use sqlite for our tests, so you can't use Postgres Arrays

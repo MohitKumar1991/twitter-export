@@ -3,7 +3,7 @@
 {% block title %}Dashboard{% endblock %}</h1>
 {% block content %}
     <div class="container">
-        <h3 style="margin:10px"> FOLLOWERS DB is <a  href="/search" target="_blank"> <span id="indexstatus" class="badge">{{index_status}} </span></a> | Total <span id="followerscount">{{fcount}}</span> followers currently.</h3> 
+        <h3 style="margin:10px"> FOLLOWERS DB is <a  href="/search" target="_blank"> <span id="indexstatus" class="badge">{{index_status|default("CREATING",true)}}</span></a> | Total <span id="followerscount">{{fcount}}</span> followers for <strong>{{username}}</strong> currently.</h3> 
         <hr style="margin: 30px"/>
         <div class="campaigns">
             <div  id="cdetails" class="campaign-details modal">
@@ -123,9 +123,9 @@
                     url:'/status',
                     success: function(data) {
                         console.log(data);
-                        $('#indexstatus').text(data.index_status);
+                        $('#indexstatus').text(data.index_status?data.index_status: 'CREATING');
                         $('#followerscount').text(UTIL.numberWithCommas(data.total_followers));
-                        if(data.index_status.toLowerCase() == 'ready') {
+                        if(data.index_status && data.index_status.toLowerCase() == 'ready') {
                             $('#indexstatus').addClass('badge-success');
                         } else {
                             $('#indexstatus').addClass('badge-warning');

@@ -1,6 +1,7 @@
 from tweepy.error import TweepError
 from .utils import load_state, store_state
 import tweepy, json, logging
+from .config import config
 
 class MyTweepy:
     def __init__(self):
@@ -17,8 +18,12 @@ class MyTweepy:
                 self.oauth.set_access_token(state.get('USER_KEY'), state.get('USER_SECRET'))
                 self.tweepyapi = tweepy.API(self.oauth)
                 try:
-                    myuser = self.tweepyapi.me()
-                    self.username = myuser.screen_name #'balajis'
+                    if len(config.TWITTER_USERNAME) > 0:
+                        myuser = self.tweepyapi.get_user(screen_name=config.TWITTER_USERNAME)
+                        self.username =  myuser.screen_name
+                    if self.username is None or len(config.TWITTER_USERNAME) > 0:
+                        myuser = self.tweepyapi.me()
+                        self.username =  myuser.screen_name 
                     store_state({ 'username': self.username, 'is_auth': 'true' })
                 except TweepError as e:
                     logging.exception(e)
