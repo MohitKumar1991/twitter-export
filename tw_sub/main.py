@@ -6,7 +6,7 @@ from datetime import datetime
 from .config import config
 from .utils import store_state, load_state, convert_to_csv
 from .dbutils import get_campaign_follower_details, get_campaign_details, get_all_campaigns, create_campaign, insert_campaign_followers, delete_campaign, get_followers_with_query
-from .dbutils import get_follower_changes,get_log_events, get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
+from .dbutils import get_new_and_unfollowed_followers, get_follower_changes,get_log_events, get_followers_count_with_query, create_link, get_all_links, get_link, get_all_links_created_by, get_emails_for_links_ids, create_email, get_all_emails
 
 app = Flask(__name__)
 CORS(app)
@@ -147,10 +147,9 @@ def followers_status():
 def dashboard():
     state = load_state()
     username = state.get('username','')
-    last_update_start = state.get('last_update_start_ms', 0)
-    last_update_end = state.get('last_update_end_ms', 0)
+    changed_followers = get_new_and_unfollowed_followers()
     fcount = get_followers_count_with_query()
-    return render_template('followers.html',last_update_start=last_update_start, last_update_end=last_update_end, username=username, fcount=fcount)
+    return render_template('followers.html',new_follower_ids=changed_followers['new'], changed_follower_ids=changed_followers['unfollowed'], username=username, fcount=fcount)
 
 @app.route("/updates", methods=['GET'])
 @flask_auth.login_required

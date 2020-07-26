@@ -16,6 +16,19 @@ def get_log_events(count=100):
     events = scopedsession.query(LogEvent).order_by(LogEvent.created_at.desc()).limit(count).all()
     return [ e.to_dict() for e in events ]
 
+def get_new_and_unfollowed_followers(times=2):
+    start_times = scopedsession.query(FollowerChanges.update_start_time).distinct(FollowerChanges.update_start_time).order_by(FollowerChanges.update_start_time.desc()).limit(times).all()
+    fchanges = scopedsession.query(FollowerChanges).filter(FollowerChanges.update_start_time.in_(start_times)).all()
+    new_followers = []
+    unfollowed_followers = []
+    for fc in fchanges:
+        if fc.change_type == 'new':
+            new_followers.append(fc.id)
+        elif fc.change_type == 'unfollow':
+            unfollowed_followers.append(fc.id)
+        else:
+            logging.warn(f'found unknown change_type {fc.change_type} for {fc.id}')
+    return {'new': new_followers, 'unfollowed': unfollowed_followers }
 
 def compute_unfollowed_and_new_followers():
     state = load_state()

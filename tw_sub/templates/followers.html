@@ -143,8 +143,8 @@
             var COLUMN_NAMES = WHITELIST_COLUMNS.map(function(c) { return c.title; });
             window.currentFollowers = [];
             var dataTable = null;
-            var lastUpdateStart = {{ last_update_start }};
-            var lastUpdateEnd = {{ last_update_end }};
+            window.new_follower_ids = new Set({{ new_follower_ids | safe  }});
+            window.unfollowed_follower_ids = new Set({{ changed_follower_ids | safe }});
             window.exporting = false;
             window.myAFlink = '';
 
@@ -286,7 +286,15 @@
                                 var ele = data[dk];
                                 ele['occupation'] = ele['occupation2'] !== null ? UTIL.capitalize(ele['occupation1']) + ' & ' + UTIL.capitalize(ele['occupation2']) : 
                                                     UTIL.capitalize(ele['occupation1']) !== null ? UTIL.capitalize(ele['occupation1']) : ''; 
-                                ele['follow_status'] = find_follow_status(lastUpdateStart, lastUpdateEnd, ele['row_created_at'], ele['row_updated_at']);
+
+                                if(window.new_follower_ids.has(ele['id'])) {
+                                    ele['follow_status'] = 'new';
+                                } else if (window.unfollowed_follower_ids.has(ele['id'])) {
+                                    ele['follow_status'] = 'unfollowed';
+                                } else {
+                                    ele['follow_status'] = '';
+                                }
+
                                 return data[dk];
                             });
                             if(dataTable === null) {
@@ -384,7 +392,7 @@
                         //TODO
                         let vals = val.split(',');
                         vals = vals.map(function(v) {
-                            if(isNaN(parseInt(val))){
+                            if(isNaN(parseInt(val)) || String(parseInt(val)) !== val) {
                                 v = v.replace(/^[\'\"]+|[\'\"]+$/g, '');
                                 v = `'${v}'`;
                             }
@@ -393,7 +401,7 @@
                         val = `(${vals.join(',')})`;
                     } else if (operator == '=') {
                         //value is a string
-                        if(isNaN(parseInt(val))){
+                        if(isNaN(parseInt(val)) || String(parseInt(val)) !== val) {
                             val = val.replace(/^[\'\"]+|[\'\"]+$/g, '');
                             val = `'${val}'`;
                         }
@@ -408,14 +416,25 @@
                     if(column == 'occupation') {
                         query = `( occupation1 ${operator} ${sanitizeValue(operator, value)} OR occupation2 ${operator} ${sanitizeValue(operator, value)} )`;
                     } else if(column == 'follow_status') {
-                        value = sanitizeValue(operator, value);
-                        if(value == 'new' && lastUpdateStart !== 0) { 
-                            query = `row_created_at > '${(new Date(lastUpdateStart)).toISOString()}'  ${operator} ${value} `;
-                        } else if (value == 'unfollowed'  && lastUpdateStart !== 0 && lastUpdateEnd > lastUpdateStart) {
-                            query = `row_updated_at < '${(new Date(lastUpdateStart)).toISOString()}'  ${operator} ${value} `;
-                        } else {
-                            query = ``;
+                        // only works for = for now
+                        console.log('ff', operator, value,  window.new_follower_ids.size, window.unfollowed_follower_ids.size);
+                        if(operator == '='){
+                            
+                            if(value === 'new' && window.new_follower_ids.size > 0) {
+                                query = `id IN (${Array.from(window.new_follower_ids).join(',')}) `
+                            } else if(value === 'unfollowed' && window.unfollowed_follower_ids.size > 0) {
+                                console.log('ff2', operator, value,  window.new_follower_ids.size, window.unfollowed_follower_ids.size);
+                                query = `id IN (${Array.from(window.unfollowed_follower_ids).join(',')})  `
+                            } else {
+                                console.log('ff3', operator, value,  window.new_follower_ids.size, window.unfollowed_follower_ids.size);
+                                query = '';
+                            }
+                            
+                        }else{
+                            console.log('follow_status only works with "="');
                         }
+                        value = sanitizeValue(operator, value);
+
                     } else {
                         let dbColumn = COLUMN_INDEX[column];
                         console.log('mapping column',column, COLUMN_INDEX[column]);
