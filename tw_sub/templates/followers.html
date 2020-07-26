@@ -168,7 +168,7 @@
                         return 'new';
                     } else if (c_at < lu_start && u_at < lu_start) {
                         //follower didnt come in last update
-                        return 'unfollow';
+                        return 'unfollowed';
                     } else {
                         //nothing this follower sttill there
                         return '';
@@ -406,7 +406,16 @@
                 for(let i=0;i<tags.length;i++){
                     var [column, operator, value] = tags[i];
                     if(column == 'occupation') {
-                        query = `( occupation1 ${operator} ${sanitizeValue(operator, value)} OR occupation2 ${operator} ${sanitizeValue(operator, value)} )`
+                        query = `( occupation1 ${operator} ${sanitizeValue(operator, value)} OR occupation2 ${operator} ${sanitizeValue(operator, value)} )`;
+                    } else if(column == 'follow_status') {
+                        value = sanitizeValue(operator, value);
+                        if(value == 'new' && lastUpdateStart !== 0) { 
+                            query = `row_created_at > '${(new Date(lastUpdateStart)).toISOString()}'  ${operator} ${value} `;
+                        } else if (value == 'unfollowed'  && lastUpdateStart !== 0 && lastUpdateEnd > lastUpdateStart) {
+                            query = `row_updated_at < '${(new Date(lastUpdateStart)).toISOString()}'  ${operator} ${value} `;
+                        } else {
+                            query = ``;
+                        }
                     } else {
                         let dbColumn = COLUMN_INDEX[column];
                         console.log('mapping column',column, COLUMN_INDEX[column]);

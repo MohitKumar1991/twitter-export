@@ -18,7 +18,7 @@ class Config:
 class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///./common.db'
     SQLALCHEMY_CONNECT_ARGS = {"check_same_thread": False }
-    TWITTER_USERNAME = 'balajis'
+    TWITTER_USERNAME = ''
     DEBUG = True
 
 

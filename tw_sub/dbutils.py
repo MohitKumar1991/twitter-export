@@ -1,8 +1,10 @@
 from uuid import uuid4
 from collections import OrderedDict, defaultdict
-from .models import scopedsession,LogEvent, State, Followers, Campaign, CampaignFollowers, Link, Email
+from .models import scopedsession,LogEvent, FollowerChanges,State, Followers, Campaign, CampaignFollowers, Link, Email
 from sqlalchemy import func, text
 import logging
+from .utils import load_state
+from datetime import datetime
 
 def log_event(msg=''):
     logging.warn(msg) #just logging here also so i dont have to log two times
@@ -13,6 +15,23 @@ def log_event(msg=''):
 def get_log_events(count=100):
     events = scopedsession.query(LogEvent).order_by(LogEvent.created_at.desc()).limit(count).all()
     return [ e.to_dict() for e in events ]
+
+
+def compute_unfollowed_and_new_followers():
+    state = load_state()
+    update_start = datetime.fromtimestamp(state['last_update_start_ms']/1000)
+    update_start_ms = state['last_update_start_ms']
+    new_followers = scopedsession.query(Followers.id).filter(Followers.row_created_at > update_start).all()
+    unfollowed_followers = scopedsession.query(Followers.id).filter(Followers.row_updated_at <  update_start).all()
+    for f in new_followers:
+        scopedsession.add(FollowerChanges(follower_id=f.id,change_type='new', update_start_time=update_start_ms))
+    for f in unfollowed_followers:
+        scopedsession.add(FollowerChanges(follower_id=f.id,change_type='unfollowed', update_start_time=update_start_ms))
+    return { 'new':new_followers, 'unfollowed': unfollowed_followers }
+
+def get_follower_changes(count=300):
+    fcs = scopedsession.query(FollowerChanges).order_by(FollowerChanges.created_at.desc()).limit(count).all()
+    return [ fc.to_dict() for fc in fcs ]
 
 def get_followers_count_with_query(query=None):
     if query is not None:

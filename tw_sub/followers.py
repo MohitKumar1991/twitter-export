@@ -10,7 +10,7 @@ from collections import OrderedDict
 import json
 import threading
 import logging
-from .dbutils import log_event
+from .dbutils import log_event, compute_unfollowed_and_new_followers
 
 """
 INIT -> CREATING -> READY 
@@ -152,6 +152,7 @@ class FollowersTask:
                     self.rate_limited = False
                     self.setup = False
                     log_event(f'starting update of followers index:{self.last_run}')
+                    compute_unfollowed_and_new_followers()
                     continue
                 else:
                     logging.warn(f'wait_till_available index ready - idle....')

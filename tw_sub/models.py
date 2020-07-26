@@ -73,16 +73,16 @@ class Followers(Base, DictMixIn):
     url = Column(String)
     entities = Column(String)
     protected = Column(String)
-    followers_count = Column(String)
-    friends_count = Column(String)
-    listed_count = Column(String)
+    followers_count = Column(Integer)
+    friends_count = Column(Integer)
+    listed_count = Column(Integer)
     created_at = Column(String)
-    favourites_count = Column(String)
+    favourites_count = Column(Integer)
     utc_offset = Column(String)
     time_zone = Column(String)
     geo_enabled = Column(String)
     verified = Column(String)
-    statuses_count = Column(String)
+    statuses_count = Column(Integer)
     lang = Column(String)
     contributors_enabled = Column(String)
     is_translator = Column(String)
@@ -110,6 +110,14 @@ class Followers(Base, DictMixIn):
     row_created_at = Column(DateTime(timezone=True), default=datetime.datetime.now)
     row_updated_at = Column(DateTime(timezone=True), onupdate=datetime.datetime.now, default=datetime.datetime.now)
 
+
+class FollowerChanges(Base, DictMixIn):
+    __tablename__ = "follower_changes"
+    id = Column(Integer, primary_key=True, index=True)
+    follower_id = Column(String)
+    change_type = Column(String)
+    update_start_time = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
 # Note that we use sqlite for our tests, so you can't use Postgres Arrays
 class Email(Base, DictMixIn):
