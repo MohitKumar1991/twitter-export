@@ -16,7 +16,7 @@ def get_log_events(count=100):
     events = scopedsession.query(LogEvent).order_by(LogEvent.created_at.desc()).limit(count).all()
     return [ e.to_dict() for e in events ]
 
-def get_new_and_unfollowed_followers(times=2):
+def get_new_and_unfollowed_followers(times=4):
     start_times = scopedsession.query(FollowerChanges.update_start_time).distinct(FollowerChanges.update_start_time).order_by(FollowerChanges.update_start_time.desc()).limit(times).all()
     fchanges = scopedsession.query(FollowerChanges).filter(FollowerChanges.update_start_time.in_(start_times)).all()
     new_followers = []

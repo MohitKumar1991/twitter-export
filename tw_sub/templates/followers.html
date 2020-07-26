@@ -133,11 +133,11 @@
                     { 'data': 'followers_count', 'title': 'followers_count' },
                     { 'data': 'friends_count', 'title': 'following_count' },
                     { 'data': 'listed_count', 'title': 'listed_count' },
+                    { 'data': 'follow_status', 'title': 'follow_status' },
                     { 'data': 'created_at', 'title': 'created_at' },
                     { 'data': 'verified', 'title': 'verified' },
                     { 'data': 'statuses_count', 'title': 'total_tweets' },
-                    { 'data': 'profile_image_url_https', 'title': 'profile image' },
-                    { 'data': 'follow_status', 'title': 'follow_status' }
+                    { 'data': 'profile_image_url_https', 'title': 'profile image' }
                 ];
             var COLUMN_INDEX = WHITELIST_COLUMNS.reduce(function(result, col){ result[col['title']] = col['data']; return result; }, {});
             var COLUMN_NAMES = WHITELIST_COLUMNS.map(function(c) { return c.title; });
@@ -287,13 +287,18 @@
                                 ele['occupation'] = ele['occupation2'] !== null ? UTIL.capitalize(ele['occupation1']) + ' & ' + UTIL.capitalize(ele['occupation2']) : 
                                                     UTIL.capitalize(ele['occupation1']) !== null ? UTIL.capitalize(ele['occupation1']) : ''; 
 
+
+                                ele['follow_status'] = [];
+
                                 if(window.new_follower_ids.has(ele['id'])) {
-                                    ele['follow_status'] = 'new';
-                                } else if (window.unfollowed_follower_ids.has(ele['id'])) {
-                                    ele['follow_status'] = 'unfollowed';
-                                } else {
-                                    ele['follow_status'] = '';
+                                    ele['follow_status'].push('new');
                                 }
+
+                                if (window.unfollowed_follower_ids.has(ele['id'])) {
+                                    ele['follow_status'].push('unfollowed');
+                                }
+
+                                ele['follow_status'] = ele['follow_status'].join(' & ');
 
                                 return data[dk];
                             });
