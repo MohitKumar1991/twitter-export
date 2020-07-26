@@ -98,6 +98,9 @@ class FollowersTask:
                 logging.exception(si)
                 if self.index_status == 'UPDATING' or self.index_status == 'CREATING':
                     log_event(f'index was {self.index_status} now setting to READY')
+                    store_state({
+                        'last_update_end_ms':  str(int(time.time() * 1000))
+                    })
                     self.index_status = 'READY'
                 logging.warn(f'cursor has reached the end - index_status is now {self.index_status}')
                 time.sleep(5)
@@ -138,8 +141,11 @@ class FollowersTask:
             ##ok things are setup
             logging.warn(f'wait_till_available timepassed since last run is {(datetime.now() - self.last_run)}')
             if self.index_status == 'READY':
-                if (datetime.now() - self.last_run) > timedelta(hours=23):
+                if (datetime.now() - self.last_run) > timedelta(hours=3):
                     self.index_status = 'UPDATING'
+                    store_state({
+                        'last_update_start_ms':  str(int(time.time() * 1000))
+                    })
                     log_event(f'starting update of followers index:{self.last_run}')
                 else:
                     logging.warn(f'wait_till_available index ready - idle....')

@@ -138,9 +138,12 @@ def followers_status():
 @app.route("/search", methods=['GET'])
 @flask_auth.login_required
 def dashboard():
-    username = load_state().get('username','')
+    state = load_state()
+    username = state.get('username','')
+    last_update_start = state.get('last_update_start_ms', 0)
+    last_update_end = state.get('last_update_end_ms', 0)
     fcount = get_followers_count_with_query()
-    return render_template('followers.html',username=username, fcount=fcount)
+    return render_template('followers.html',last_update_start=last_update_start, last_update_end=last_update_end, username=username, fcount=fcount)
 
 @app.route("/updates", methods=['GET'])
 @flask_auth.login_required

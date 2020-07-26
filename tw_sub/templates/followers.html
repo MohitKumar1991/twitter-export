@@ -142,6 +142,8 @@
             var COLUMN_NAMES = WHITELIST_COLUMNS.map(function(c) { return c.title; });
             window.currentFollowers = [];
             var dataTable = null;
+            var lastUpdateStart = {{ last_update_start }};
+            var lastUpdateEnd = {{ last_update_end }};
             window.exporting = false;
             window.myAFlink = '';
 
