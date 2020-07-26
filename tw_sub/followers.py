@@ -145,10 +145,14 @@ class FollowersTask:
                     self.index_status = 'UPDATING'
                     store_state({
                         'index_status': self.index_status,
-                        'last_update_start_ms':  str(int(time.time() * 1000))
+                        'last_update_start_ms':  str(int(time.time() * 1000)),
+                        'next_cursor': '0'
                     })
+                    self.checkpoint['next_cursor'] = None
+                    self.rate_limited = False
+                    self.setup = False
                     log_event(f'starting update of followers index:{self.last_run}')
-                    return
+                    continue
                 else:
                     logging.warn(f'wait_till_available index ready - idle....')
                 time.sleep(5)
