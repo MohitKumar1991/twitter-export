@@ -192,6 +192,8 @@ class FollowersTask:
                 del d[k]
             d['id'] = str(d['id'])
             #use this to get the actual url
+            ud = { u['url']:u['expanded_url'] for u in d.entities['url']['urls'] } if 'url' in d.entities and 'urls' in d.entities['url'] else {}
+            d['url'] = ud.get(d['url'], d['url'])
             d['entities'] = json.dumps(d['entities'])
             if 'status' in d:
                 del d['status']

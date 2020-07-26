@@ -136,7 +136,8 @@
                     { 'data': 'created_at', 'title': 'created_at' },
                     { 'data': 'verified', 'title': 'verified' },
                     { 'data': 'statuses_count', 'title': 'total_tweets' },
-                    { 'data': 'profile_image_url_https', 'title': 'profile image' }
+                    { 'data': 'profile_image_url_https', 'title': 'profile image' },
+                    { 'data': 'follow_status', 'title': 'follow_status' }
                 ];
             var COLUMN_INDEX = WHITELIST_COLUMNS.reduce(function(result, col){ result[col['title']] = col['data']; return result; }, {});
             var COLUMN_NAMES = WHITELIST_COLUMNS.map(function(c) { return c.title; });
@@ -146,6 +147,34 @@
             var lastUpdateEnd = {{ last_update_end }};
             window.exporting = false;
             window.myAFlink = '';
+
+            function find_follow_status(lu_start, lu_end, c_at, u_at) {
+                c_at = Date.parse(c_at);
+                u_at = Date.parse(u_at);
+                if(lu_start === 0){
+                    //hasn't done single update just return blank - dont know what to do
+                    return '';
+                } else if(lu_end < lu_start) {
+                    //update is going on - i can tell new but not unfollowed
+                    if(c_at > lu_start) {
+                        return 'new';
+                    } else {
+                        return '';
+                    }
+                } else {
+                    //update has ended - i can tell both
+                    if(c_at > lu_start) {
+                        // follower was created in last update
+                        return 'new';
+                    } else if (c_at < lu_start && u_at < lu_start) {
+                        //follower didnt come in last update
+                        return 'unfollow';
+                    } else {
+                        //nothing this follower sttill there
+                        return '';
+                    }
+                }
+            }
 
             $('#aflink').click(function() {
                 UTIL.selectText('aflink');
@@ -257,6 +286,7 @@
                                 var ele = data[dk];
                                 ele['occupation'] = ele['occupation2'] !== null ? UTIL.capitalize(ele['occupation1']) + ' & ' + UTIL.capitalize(ele['occupation2']) : 
                                                     UTIL.capitalize(ele['occupation1']) !== null ? UTIL.capitalize(ele['occupation1']) : ''; 
+                                ele['follow_status'] = find_follow_status(lastUpdateStart, lastUpdateEnd, ele['row_created_at'], ele['row_updated_at']);
                                 return data[dk];
                             });
                             if(dataTable === null) {
